@@ -1,14 +1,13 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub mod googlebooks;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use thiserror::Error;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+#[derive(Error, Debug)]
+pub enum ClientError {
+    #[error("error coming from internal http client")]
+    InternalClient(#[from] reqwest::Error),
+    #[error("rate limit exceeded for external service")]
+    RateLimitExceeded,
+    #[error("generic http error that contains status code and response body")]
+    Http(u16, String),
 }
