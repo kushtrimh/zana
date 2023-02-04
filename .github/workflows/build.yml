@@ -19,6 +19,6 @@ jobs:
     - name: Build zana service
       working-directory: services/zana
       run: cargo build --verbose
-    - name: Run tests
+    - name: Run tests in zana service
       working-directory: services/zana
       run: cargo test --verbose
