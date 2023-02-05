@@ -138,6 +138,7 @@ pub async fn fetch_volume(
     author: &str,
     title: &str,
 ) -> Result<Response<Body>, Error> {
+    log::debug!("sending volume query request for isbn: {}", isbn);
     let volume = match client.volume_by_isbn(isbn).await {
         Ok(volume) => volume,
         Err(err) => return response_from_client_error(err),
@@ -146,6 +147,12 @@ pub async fn fetch_volume(
     let response = if let Some(items) = volume.items {
         success_response(&items[0])
     } else {
+        log::debug!("volume query request for isbn {} returned no data", isbn);
+        log::debug!(
+            "sending volume query request for title {} of author {}",
+            title,
+            author
+        );
         let volume = match client.volume(&author, &title).await {
             Ok(volume) => volume,
             Err(err) => return response_from_client_error(err),
@@ -153,6 +160,11 @@ pub async fn fetch_volume(
         if let Some(items) = volume.items {
             success_response(&items[0])
         } else {
+            log::debug!(
+                "volume query request for title {} of author {} returned no data",
+                title,
+                author
+            );
             fail_response(404, ResponseError::NotFound, "Volume not found")
         }
     };
