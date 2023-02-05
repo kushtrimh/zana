@@ -81,8 +81,13 @@ impl Client {
             return Err(ClientError::Http(status_code, response_body));
         }
 
-        let volume = response.json().await?;
+        let mut volume: Volume = response.json().await?;
 
+        if let Some(items) = &volume.items {
+            if items.is_empty() {
+                volume.items = None
+            }
+        }
         Ok(volume)
     }
 }
