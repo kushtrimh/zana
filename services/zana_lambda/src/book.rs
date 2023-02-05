@@ -99,11 +99,11 @@ fn success_response(item: &VolumeItem) -> Result<Response<Body>, Error> {
 }
 
 fn response_from_client_error(error: ClientError) -> Result<Response<Body>, Error> {
-    match error {
+    let (status_code, error_type, details) = match error {
         ClientError::InternalClient(err) => {
             let status_code = err.status().unwrap_or(StatusCode::SERVICE_UNAVAILABLE);
             log::error!("internal http client error {}, {:?}", status_code, err);
-            fail_response(
+            (
                 status_code.as_u16(),
                 ResponseError::HttpClientError,
                 "Could not retrieve data from external service",
@@ -111,25 +111,26 @@ fn response_from_client_error(error: ClientError) -> Result<Response<Body>, Erro
         }
         ClientError::RateLimitExceeded => {
             log::warn!("rate limit exceeded");
-            fail_response(
+            (
                 429,
                 ResponseError::LimitExceeded,
                 "Rate limit exceeded for external service",
             )
-        }
+        },
         ClientError::Http(status_code, description) => {
             log::error!(
                 "http error while retrieving data {}, {}",
                 status_code,
                 description
             );
-            fail_response(
+            (
                 status_code,
                 ResponseError::HttpClientError,
                 "Could not retrieve data",
             )
-        }
-    }
+        },
+    };
+    fail_response(status_code, error_type, details)
 }
 
 pub async fn fetch_volume(
@@ -170,4 +171,17 @@ pub async fn fetch_volume(
     };
 
     response
+}
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn create_success_response() {}
+
+    #[test]
+    fn create_failure_response() {}
+
+    #[test]
+    fn create_response_from_client_error() {}
 }
