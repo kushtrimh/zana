@@ -17,6 +17,7 @@ enum ResponseError {
     MissingParameter,
     HttpClientError,
     NotFound,
+    ServiceError,
 }
 
 impl fmt::Display for ResponseError {
@@ -71,15 +72,17 @@ struct BookData {
     description: String,
 }
 
-fn fail_response(status: u16, error: ResponseError, details: &str) -> Response<Body> {
-    let response = serde_json::to_string(&FailureResponse::new(error, details))
-        .expect("could not convert failure response to json");
+fn fail_response(
+    status: u16,
+    error: ResponseError,
+    details: &str,
+) -> Result<Response<Body>, Error> {
+    let response = serde_json::to_string(&FailureResponse::new(error, details))?;
 
-    Response::builder()
+    Ok(Response::builder()
         .header("content-type", "application/json")
         .status(StatusCode::from_u16(status).unwrap_or(StatusCode::SERVICE_UNAVAILABLE))
-        .body(Body::Text(response))
-        .expect("could not build fail response")
+        .body(Body::Text(response))?)
 }
 
 fn success_response(item: &VolumeItem) -> Response<Body> {
@@ -99,7 +102,7 @@ fn success_response(item: &VolumeItem) -> Response<Body> {
         .expect("could not build success response")
 }
 
-fn response_from_client_error(error: ClientError) -> Response<Body> {
+fn response_from_client_error(error: ClientError) -> Result<Response<Body>, Error> {
     match error {
         ClientError::InternalClient(err) => {
             let status_code = err.status().unwrap_or(StatusCode::SERVICE_UNAVAILABLE);
@@ -133,7 +136,12 @@ fn response_from_client_error(error: ClientError) -> Response<Body> {
     }
 }
 
-async fn fetch_volume(client: Client, isbn: &str, author: &str, title: &str) -> Response<Body> {
+async fn fetch_volume(
+    client: Client,
+    isbn: &str,
+    author: &str,
+    title: &str,
+) -> Result<Response<Body>, Error> {
     let volume = match client.volume_by_isbn(isbn).await {
         Ok(volume) => volume,
         Err(err) => return response_from_client_error(err),
@@ -149,11 +157,11 @@ async fn fetch_volume(client: Client, isbn: &str, author: &str, title: &str) -> 
         if let Some(items) = volume.items {
             success_response(&items[0])
         } else {
-            fail_response(404, ResponseError::NotFound, "Volume not found")
+            fail_response(404, ResponseError::NotFound, "Volume not found")?
         }
     };
 
-    response
+    Ok(response)
 }
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
@@ -165,11 +173,11 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     let isbn = match event.query_string_parameters().first("isbn") {
         Some(isbn) => isbn.to_string(),
         None => {
-            return Ok(fail_response(
+            return fail_response(
                 400,
                 ResponseError::MissingParameter,
                 "ISBN is required to retrieve book data",
-            ));
+            );
         }
     };
 
@@ -184,7 +192,13 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
         .unwrap_or("")
         .to_string();
 
-    Ok(fetch_volume(client, &isbn, &author, &title).await)
+    match fetch_volume(client, &isbn, &author, &title).await {
+        Ok(response) => Ok(response),
+        Err(err) => {
+            log::error!("could not retrieve data {:?}", err);
+            fail_response(503, ResponseError::ServiceError, "Could not retrieve data")
+        }
+    }
 }
 
 #[tokio::main]
