@@ -168,7 +168,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     let gbooks_api_key = env::var("GOOGLEBOOKS_API_KEY").expect("API key env variable required");
     let gbooks_api_url = env::var("GOOGLEBOOKS_API_URL").expect("API URL env variable required");
 
-    let client = Client::new(&gbooks_api_key, &gbooks_api_url).expect("to change");
+    let client = Client::new(&gbooks_api_key, &gbooks_api_url)?;
 
     let isbn = match event.query_string_parameters().first("isbn") {
         Some(isbn) => isbn.to_string(),
