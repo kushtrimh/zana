@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::{Book, BookClient, ClientError, Rating};
+use crate::{create_http_client, Book, BookClient, ClientError, Rating};
 
 const VOLUMES_PATH: &str = "/books/v1/volumes";
 
@@ -31,22 +31,6 @@ struct VolumeInfo {
     ratings_count: u32,
 }
 
-fn create_book(items: Vec<VolumeItem>) -> Option<Book> {
-    if items.is_empty() {
-        return None;
-    }
-
-    let volume_item = &items[0];
-    let volume_info = &volume_item.info;
-
-    let rating = Rating::new(volume_info.average_rating, volume_info.ratings_count);
-    Some(Book::new_with_rating(
-        volume_info.page_count,
-        &volume_info.description,
-        rating,
-    ))
-}
-
 pub struct Client {
     api_key: String,
     api_url: String,
@@ -55,16 +39,28 @@ pub struct Client {
 
 impl Client {
     pub fn new(api_key: &str, api_url: &str) -> Result<Self, ClientError> {
-        let version: &str = option_env!("CARGO_PKG_VERSION").unwrap_or("1.0.0");
-
-        let http_client = reqwest::Client::builder()
-            .user_agent(format!("zana/{} (gzip)", version))
-            .build()?;
+        let http_client = create_http_client()?;
         Ok(Client {
             api_key: String::from(api_key),
             api_url: String::from(api_url),
             http_client,
         })
+    }
+
+    fn create_book(&self, items: Vec<VolumeItem>) -> Option<Book> {
+        if items.is_empty() {
+            return None;
+        }
+
+        let volume_item = &items[0];
+        let volume_info = &volume_item.info;
+
+        let rating = Rating::new(volume_info.average_rating, volume_info.ratings_count);
+        Some(Book::new_with_rating(
+            volume_info.page_count,
+            &volume_info.description,
+            rating,
+        ))
     }
 
     async fn fetch_book(&self, query: &str) -> Result<Option<Book>, ClientError> {
@@ -94,7 +90,7 @@ impl Client {
         let volume: Volume = response.json().await?;
 
         if let Some(items) = volume.items {
-            return Ok(create_book(items));
+            return Ok(self.create_book(items));
         }
         Ok(None)
     }

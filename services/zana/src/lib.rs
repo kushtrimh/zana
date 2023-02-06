@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use async_trait::async_trait;
 use thiserror::Error;
 
@@ -28,15 +30,15 @@ pub struct Rating {
 }
 
 impl Book {
-    pub fn new(page_count: u32, description: &str) -> Book {
-        Book {
+    pub fn new(page_count: u32, description: &str) -> Self {
+        Self {
             page_count,
             description: String::from(description),
             rating: None,
         }
     }
 
-    pub fn new_with_rating(page_count: u32, description: &str, rating: Rating) -> Book {
+    pub fn new_with_rating(page_count: u32, description: &str, rating: Rating) -> Self {
         let mut book = Book::new(page_count, description);
         book.rating = Some(rating);
         book
@@ -44,8 +46,8 @@ impl Book {
 }
 
 impl Rating {
-    pub fn new(average_rating: f32, ratings_count: u32) -> Rating {
-        Rating {
+    pub fn new(average_rating: f32, ratings_count: u32) -> Self {
+        Self {
             average_rating,
             ratings_count,
         }
@@ -57,4 +59,14 @@ pub trait BookClient {
     async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError>;
 
     async fn book(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError>;
+}
+
+fn create_http_client() -> Result<reqwest::Client, reqwest::Error> {
+    let version: &str = option_env!("CARGO_PKG_VERSION").unwrap_or("1.0.0");
+
+    reqwest::Client::builder()
+        .user_agent(format!("zana/{} (gzip)", version))
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(30))
+        .build()
 }
