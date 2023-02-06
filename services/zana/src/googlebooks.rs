@@ -17,8 +17,10 @@ struct VolumeItem {
 
 #[derive(Deserialize, Debug)]
 struct VolumeInfo {
-    title: String,
-    authors: Vec<String>,
+    #[serde(rename(deserialize = "title"))]
+    _title: String,
+    #[serde(rename(deserialize = "authors"))]
+    _authors: Vec<String>,
     description: String,
     #[serde(rename(deserialize = "pageCount"))]
     page_count: u32,
@@ -64,16 +66,16 @@ impl Client {
         })
     }
 
-    pub async fn volume_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
-        self.fetch_volume(&format!("isbn:{}", isbn)).await
+    pub async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
+        self.fetch_book(&format!("isbn:{}", isbn)).await
     }
 
-    pub async fn volume(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError> {
-        self.fetch_volume(&format!("inauthor:{} intitle:{}", author, title))
+    pub async fn book(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError> {
+        self.fetch_book(&format!("inauthor:{} intitle:{}", author, title))
             .await
     }
 
-    async fn fetch_volume(&self, query: &str) -> Result<Option<Book>, ClientError> {
+    async fn fetch_book(&self, query: &str) -> Result<Option<Book>, ClientError> {
         let query_list: Vec<(&str, &str)> = vec![
             ("key", &self.api_key),
             ("maxResults", "1"),
