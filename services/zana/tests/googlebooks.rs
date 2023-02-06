@@ -152,9 +152,7 @@ async fn handle_other_http_error() {
     let volume = client.volume_by_isbn(isbn).await;
 
     m.assert();
-    let returned_error = volume
-        .err()
-        .expect(&format!("error not returned when expected"));
+    let returned_error = volume.err().expect("error not returned when expected");
     match returned_error {
         ClientError::Http(status_code, _) => {
             assert_eq!(expected_status_code, status_code);

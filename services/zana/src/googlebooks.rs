@@ -1,31 +1,47 @@
 use serde::Deserialize;
 
-use crate::ClientError;
+use crate::{Book, ClientError, Rating};
 
 const VOLUMES_PATH: &str = "/books/v1/volumes";
 
 #[derive(Deserialize, Debug)]
-pub struct Volume {
-    pub items: Option<Vec<VolumeItem>>,
+struct Volume {
+    items: Option<Vec<VolumeItem>>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct VolumeItem {
+struct VolumeItem {
     #[serde(rename(deserialize = "volumeInfo"))]
-    pub info: VolumeInfo,
+    info: VolumeInfo,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct VolumeInfo {
-    pub title: String,
-    pub authors: Vec<String>,
-    pub description: String,
+struct VolumeInfo {
+    title: String,
+    authors: Vec<String>,
+    description: String,
     #[serde(rename(deserialize = "pageCount"))]
-    pub page_count: u32,
+    page_count: u32,
     #[serde(rename(deserialize = "averageRating"))]
-    pub average_rating: f32,
+    average_rating: f32,
     #[serde(rename(deserialize = "ratingsCount"))]
-    pub ratings_count: u32,
+    ratings_count: u32,
+}
+
+fn create_book(items: Vec<VolumeItem>) -> Option<Book> {
+    if items.is_empty() {
+        return None;
+    }
+
+    let volume_item = &items[0];
+    let volume_info = &volume_item.info;
+
+    let rating = Rating::new(volume_info.average_rating, volume_info.ratings_count);
+    Some(Book::new_with_rating(
+        volume_info.page_count,
+        &volume_info.description,
+        rating,
+    ))
 }
 
 pub struct Client {
@@ -48,16 +64,16 @@ impl Client {
         })
     }
 
-    pub async fn volume_by_isbn(&self, isbn: &str) -> Result<Volume, ClientError> {
+    pub async fn volume_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
         self.fetch_volume(&format!("isbn:{}", isbn)).await
     }
 
-    pub async fn volume(&self, author: &str, title: &str) -> Result<Volume, ClientError> {
+    pub async fn volume(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError> {
         self.fetch_volume(&format!("inauthor:{} intitle:{}", author, title))
             .await
     }
 
-    async fn fetch_volume(&self, query: &str) -> Result<Volume, ClientError> {
+    async fn fetch_volume(&self, query: &str) -> Result<Option<Book>, ClientError> {
         let query_list: Vec<(&str, &str)> = vec![
             ("key", &self.api_key),
             ("maxResults", "1"),
@@ -81,8 +97,11 @@ impl Client {
             return Err(ClientError::Http(status_code, response_body));
         }
 
-        let volume = response.json().await?;
+        let volume: Volume = response.json().await?;
 
-        Ok(volume)
+        if let Some(items) = volume.items {
+            return Ok(create_book(items));
+        }
+        Ok(None)
     }
 }
