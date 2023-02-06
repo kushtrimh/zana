@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use thiserror::Error;
 
 pub mod googlebooks;
@@ -49,4 +50,11 @@ impl Rating {
             ratings_count,
         }
     }
+}
+
+#[async_trait]
+pub trait BookClient {
+    async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError>;
+
+    async fn book(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError>;
 }

@@ -1,6 +1,7 @@
+use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::{Book, ClientError, Rating};
+use crate::{Book, BookClient, ClientError, Rating};
 
 const VOLUMES_PATH: &str = "/books/v1/volumes";
 
@@ -66,15 +67,6 @@ impl Client {
         })
     }
 
-    pub async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
-        self.fetch_book(&format!("isbn:{}", isbn)).await
-    }
-
-    pub async fn book(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError> {
-        self.fetch_book(&format!("inauthor:{} intitle:{}", author, title))
-            .await
-    }
-
     async fn fetch_book(&self, query: &str) -> Result<Option<Book>, ClientError> {
         let query_list: Vec<(&str, &str)> = vec![
             ("key", &self.api_key),
@@ -105,5 +97,17 @@ impl Client {
             return Ok(create_book(items));
         }
         Ok(None)
+    }
+}
+
+#[async_trait]
+impl BookClient for Client {
+    async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
+        self.fetch_book(&format!("isbn:{}", isbn)).await
+    }
+
+    async fn book(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError> {
+        self.fetch_book(&format!("inauthor:{} intitle:{}", author, title))
+            .await
     }
 }

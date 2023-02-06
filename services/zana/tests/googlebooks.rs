@@ -4,7 +4,7 @@ use httpmock::prelude::*;
 use httpmock::Mock;
 
 use zana::googlebooks::Client;
-use zana::{Book, ClientError};
+use zana::{Book, BookClient, ClientError};
 
 const API_KEY: &str = "b85a45ddd5a99124cf4ec9a74f93fcf1";
 const VOLUME_PATH: &str = "/books/v1/volumes";
