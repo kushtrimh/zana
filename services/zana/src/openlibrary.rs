@@ -19,7 +19,19 @@ struct WorkIdentifier {
 
 #[derive(Deserialize, Debug)]
 struct WorkResponse {
-    description: String,
+    description: Option<Description>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum Description {
+    String(String),
+    Map(DescriptionMap),
+}
+
+#[derive(Deserialize, Debug)]
+struct DescriptionMap {
+    value: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -53,7 +65,14 @@ impl Client {
         work_response: &WorkResponse,
         rating_response: &RatingResponse,
     ) -> Book {
-        let mut book = Book::new(book_response.number_of_pages, &work_response.description);
+        let description = match &work_response.description {
+            Some(description) => match description {
+                Description::String(description_string) => description_string,
+                Description::Map(description_map) => &description_map.value,
+            },
+            None => "",
+        };
+        let mut book = Book::new(book_response.number_of_pages, description);
         if let Some(average_rating) = rating_response.summary.average {
             book.rating = Some(Rating::new(average_rating, rating_response.summary.count));
         }
@@ -84,7 +103,7 @@ impl Client {
             .send_request(&format!("{}{}/{}.json", self.api_url, ISBN_PATH, isbn))
             .await?;
         if response.status().as_u16() == 404 {
-            // todo: add log here later
+            log::debug!("book with ISBN({}) not found on Open Library", isbn);
             return Ok(None);
         }
         Ok(Some(self.handle_response(response).await?.json().await?))
@@ -116,7 +135,10 @@ impl Client {
         };
 
         if book_response.works.is_empty() {
-            // todo: add debug log here
+            log::debug!(
+                "no works identifier found for book with ISBN({}) on Open Library",
+                isbn
+            );
             return Ok(None);
         }
         let works_path = &book_response.works[0].key;

@@ -1,17 +1,14 @@
-use std::fs;
+mod util;
 
 use httpmock::prelude::*;
 use httpmock::Mock;
 
+use crate::util::get_sample;
 use zana::googlebooks::Client;
 use zana::{Book, BookClient, ClientError};
 
 const API_KEY: &str = "b85a45ddd5a99124cf4ec9a74f93fcf1";
 const VOLUME_PATH: &str = "/books/v1/volumes";
-
-fn get_sample(sample: &str) -> String {
-    fs::read_to_string(format!("tests/sample/{}", sample)).expect("could not read sample file")
-}
 
 fn create_client(server: &MockServer) -> Client {
     Client::new(API_KEY, &format!("http://{}", &server.address())).expect("could not create client")
@@ -47,7 +44,7 @@ fn create_mock<'a>(
 }
 
 #[tokio::test]
-async fn retrieve_book_by_isbn() {
+async fn fetch_book_by_isbn() {
     let isbn = "9780316387316";
 
     let server = MockServer::start();
@@ -70,7 +67,7 @@ async fn retrieve_book_by_isbn() {
 }
 
 #[tokio::test]
-async fn retrieve_book_by_name_and_author() {
+async fn fetch_book_by_name_and_author() {
     let author = "Joe Abercrombie";
     let title = "The Blade Itself";
 
