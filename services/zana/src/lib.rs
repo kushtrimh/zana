@@ -16,14 +16,14 @@ pub enum ClientError {
     Http(u16, String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Book {
     pub page_count: u32,
     pub description: String,
     pub rating: Option<Rating>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Rating {
     pub average_rating: f32,
     pub ratings_count: u32,

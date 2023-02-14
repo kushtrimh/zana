@@ -2,7 +2,7 @@ mod util;
 
 use httpmock::prelude::*;
 use httpmock::Mock;
-use zana::{Book, BookClient};
+use zana::{Book, BookClient, ClientError, Rating};
 
 use crate::util::get_sample;
 use zana::openlibrary::Client;
@@ -29,42 +29,33 @@ fn create_mock<'a>(
     })
 }
 
-fn assert_book_equality(book: Book) {
-    let rating = book.rating.expect("ratings should exist");
-
-    assert_eq!(542, book.page_count);
-    assert_eq!(
-        book.description,
-        "Logen Ninefingers, infamous barbarian, has finally run out of luck.",
-    );
-    assert_eq!(4.5, rating.average_rating);
-    assert_eq!(23, rating.ratings_count);
+fn create_default_expected_book() -> Book {
+    let ratings = Rating::new(4.5, 23);
+    let description = "Logen Ninefingers, infamous barbarian, has finally run out of luck.";
+    Book::new_with_rating(542, description, ratings)
 }
 
-#[tokio::test]
-async fn fetch_book_by_isbn() {
-    let isbn = "9780316387316";
-
+async fn assert_successful_fetch(
+    isbn: &str,
+    isbn_sample: &str,
+    works_sample: &str,
+    ratings_sample: &str,
+) -> Book {
     let server = MockServer::start();
     let isbn_mock = create_mock(
         &server,
         &format!("{}/{}.json", ISBN_PATH, isbn),
         200,
-        &get_sample("openlibrary_isbn.json"),
+        isbn_sample,
     );
 
-    let works_mock = create_mock(
-        &server,
-        &format!("{}.json", WORKS_PATH),
-        200,
-        &get_sample("openlibrary_works.json"),
-    );
+    let works_mock = create_mock(&server, &format!("{}.json", WORKS_PATH), 200, works_sample);
 
     let ratings_mock = create_mock(
         &server,
         &format!("{}{}.json", WORKS_PATH, RATINGS_PATH),
         200,
-        &get_sample("openlibrary_ratings.json"),
+        ratings_sample,
     );
 
     let client = create_client(&server);
@@ -77,8 +68,158 @@ async fn fetch_book_by_isbn() {
     isbn_mock.assert();
     works_mock.assert();
     ratings_mock.assert();
-
-    assert_book_equality(book);
+    book
 }
 
-// Todo: add tests where description is just a string
+#[tokio::test]
+async fn fetch_book_by_isbn() {
+    let isbn = "9780316387316";
+
+    let book = assert_successful_fetch(
+        &isbn,
+        &get_sample("openlibrary_isbn.json"),
+        &get_sample("openlibrary_works.json"),
+        &get_sample("openlibrary_ratings.json"),
+    )
+    .await;
+    assert_eq!(create_default_expected_book(), book);
+}
+
+#[tokio::test]
+async fn fetch_book_by_isbn_with_description_as_string() {
+    let isbn = "9780316387316";
+
+    let book = assert_successful_fetch(
+        &isbn,
+        &get_sample("openlibrary_isbn.json"),
+        &get_sample("openlibrary_works_string_description.json"),
+        &get_sample("openlibrary_ratings.json"),
+    )
+    .await;
+    assert_eq!(create_default_expected_book(), book);
+}
+
+#[tokio::test]
+async fn fetch_book_by_isbn_with_no_description() {
+    let isbn = "9780316387316";
+
+    let book = assert_successful_fetch(
+        &isbn,
+        &get_sample("openlibrary_isbn.json"),
+        &get_sample("openlibrary_works_no_description.json"),
+        &get_sample("openlibrary_ratings.json"),
+    )
+    .await;
+    let mut expected_book = create_default_expected_book();
+    expected_book.description = String::new();
+    assert_eq!(expected_book, book);
+}
+
+#[tokio::test]
+async fn fetch_book_by_isbn_with_no_ratings() {
+    let isbn = "9780316387316";
+
+    let book = assert_successful_fetch(
+        &isbn,
+        &get_sample("openlibrary_isbn.json"),
+        &get_sample("openlibrary_works.json"),
+        &get_sample("openlibrary_no_ratings.json"),
+    )
+    .await;
+    let mut expected_book = create_default_expected_book();
+    expected_book.rating = None;
+    assert_eq!(expected_book, book);
+}
+
+#[tokio::test]
+async fn no_book_returned_on_404_from_isbn_call() {
+    let isbn = "9780316387316";
+
+    let server = MockServer::start();
+    let isbn_mock = create_mock(&server, &format!("{}/{}.json", ISBN_PATH, isbn), 404, "");
+
+    let client = create_client(&server);
+    let book = client
+        .book_by_isbn(isbn)
+        .await
+        .expect("could not get book by isbn");
+
+    isbn_mock.assert();
+    assert!(book.is_none());
+}
+
+#[tokio::test]
+async fn no_book_returned_when_works_key_missing() {
+    let isbn = "9780316387316";
+
+    let server = MockServer::start();
+    let isbn_mock = create_mock(
+        &server,
+        &format!("{}/{}.json", ISBN_PATH, isbn),
+        200,
+        &get_sample("openlibrary_isbn_no_works_key.json"),
+    );
+
+    let client = create_client(&server);
+    let book = client
+        .book_by_isbn(isbn)
+        .await
+        .expect("could not get book by isbn");
+
+    isbn_mock.assert();
+    assert!(book.is_none());
+}
+
+#[tokio::test]
+async fn return_rate_limit_error() {
+    let isbn = "9780316387316";
+
+    for status_code in [429, 403] {
+        let server = MockServer::start();
+        let isbn_mock = create_mock(
+            &server,
+            &format!("{}/{}.json", ISBN_PATH, isbn),
+            status_code,
+            "",
+        );
+
+        let client = create_client(&server);
+        let book = client.book_by_isbn(isbn).await;
+
+        isbn_mock.assert();
+        let _returned_error = book.err().expect(&format!(
+            "error not returned when expected for status {}",
+            status_code
+        ));
+        assert!(matches!(ClientError::RateLimitExceeded, _returned_error));
+    }
+}
+
+#[tokio::test]
+async fn handle_other_http_error() {
+    let isbn = "9780316387316";
+
+    for status_code in [400, 500, 503] {
+        let server = MockServer::start();
+        let isbn_mock = create_mock(
+            &server,
+            &format!("{}/{}.json", ISBN_PATH, isbn),
+            status_code,
+            "",
+        );
+
+        let client = create_client(&server);
+        let book = client.book_by_isbn(isbn).await;
+
+        isbn_mock.assert();
+        let returned_error = book.err().expect("error not returned when expected");
+        match returned_error {
+            ClientError::Http(response_status_code, _) => {
+                assert_eq!(status_code, response_status_code);
+            }
+            _ => {
+                panic!("invalid error type returned")
+            }
+        }
+    }
+}
