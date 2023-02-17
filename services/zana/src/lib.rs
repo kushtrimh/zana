@@ -28,13 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new(api_key, api_url)?;
 
     match client.book_by_isbn(isbn).await {
-        Ok(book) => {
-            if let Some(book) = book {
-                println!("book found ({}: {:?})", isbn, &book);
-            } else {
-                eprintln!("book ({}) not found", isbn);
-            }
-        },
+        Ok(book) => println!("book found ({}: {:?})", isbn, &book),
         Err(err) => eprintln!("could not fetch book by ISBN {:?}", err),
     };
     Ok(())
@@ -62,14 +56,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new(api_url)?;
 
     match client.book_by_isbn(isbn).await {
-        Ok(book) => {
-            if let Some(book) = &book {
-                println!("book found ({}: {:?})", isbn, &book);
-            } else {
-                println!("book ({}) not found", isbn);
-            }
-        },
-        Err(err) => panic!("could not fetch book by ISBN {:?}", err),
+        Ok(book) => println!("book found ({}: {:?})", isbn, &book),
+        Err(err) => eprintln!("could not fetch book by ISBN {:?}", err),
     };
     Ok(())
 }
@@ -78,12 +66,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Returned data
 
 For both implementations, all the data is grouped into the [Book](struct@Book) type which
-is returned from clients. In cases where a book cannot be found (_404 error from the API_)
-then [None](None) is returned.
+is returned from clients.
 
-For status codes that are not 404 or 200, [ClientError](enum@ClientError) is returned with more
+For status codes that are not 200, [ClientError](enum@ClientError) is returned with more
 information about the source of the error.
 */
+
+extern crate core;
 
 use std::time::Duration;
 
@@ -96,8 +85,8 @@ pub mod openlibrary;
 /// An error that occurs for implementations of [BookClient][trait@BookClient].
 ///
 /// The error will contain different variants to make handling of errors easier.
-/// Some specific Http status codes (e.g. `429` _Too Many Requests_) will have
-/// their own variant because of their importance or more custom handling they will require.
+/// Some specific Http status codes (e.g. `429` _Too Many Requests_ or `404` _Not Found_) will have
+/// their own variant because of their importance or the custom handling they will require.
 #[derive(Error, Debug)]
 pub enum ClientError {
     /// Occurs for any error that comes from [reqwest](reqwest) crate. This will include errors
@@ -107,7 +96,10 @@ pub enum ClientError {
     /// Occurs when a 429 or (403 in some clients) status code is returned from the response.
     #[error("rate limit exceeded for external service")]
     RateLimitExceeded,
-    /// Occurs for any response that is not 200 or 429 (403 included for some clients).
+    /// Occurs when queried book is not found
+    #[error("book is not found")]
+    NotFound,
+    /// Occurs for any response that is not 200, 404 or 429 (403 included for some clients).
     #[error("generic http error that contains status code and response body")]
     Http(u16, String),
 }
@@ -138,7 +130,7 @@ pub struct Rating {
 impl Book {
     /// Returns a Book with defaults for optional data.
     ///
-    /// - rating is optional, and by default is [None](None)
+    /// - rating is optional, and by default is [`None`](None)
     pub fn new(page_count: u32, description: &str) -> Self {
         Self {
             page_count,
@@ -159,7 +151,7 @@ impl Rating {
     /// Returns a new rating.
     ///
     /// Meant only to be created for ratings that are valid and exist.
-    /// In this case a rating that is 'valid' is one that does not have a `ratings_count` of 0.
+    /// In this case a rating that is '_valid_' is one that does not have a `ratings_count` of 0.
     pub fn new(average_rating: f32, ratings_count: u32) -> Self {
         Self {
             average_rating,
@@ -177,20 +169,18 @@ impl Rating {
 /// This trait provides different ways of which the data can be retrieved.
 ///
 /// In cases where a third-party API does not support one of the ways to retrieve data,
-/// then `Ok(None)` should be returned, to indicate that a [Book](struct@Book) could not be
-/// found using that functionality.
+/// then [`unimplemented!`](macro@unimplemeted) is used, to indicate that
+/// a [Book](struct@Book) cannot not be queried using that functionality.
 ///
-/// When queried, if the book is not found at the third-party service, then `Ok(None)`
-/// will be returned.
 /// When there's an error with communication/network, and the request cannot be completed,
-/// the rate limit has been reached, or a HTTP status code has been returned that is not 200, then
-/// an error will be returned.
+/// the rate limit has been reached, the book could not be found,
+/// or a HTTP status code has been returned that is not 200, then an error will be returned.
 pub trait BookClient {
     /// Returns a book from the given ISBN.
-    async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError>;
+    async fn book_by_isbn(&self, isbn: &str) -> Result<Book, ClientError>;
 
     /// Returns a book from author and title
-    async fn book(&self, author: &str, title: &str) -> Result<Option<Book>, ClientError>;
+    async fn book(&self, author: &str, title: &str) -> Result<Book, ClientError>;
 }
 
 fn create_http_client() -> Result<reqwest::Client, reqwest::Error> {

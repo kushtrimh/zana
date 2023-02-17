@@ -1,5 +1,6 @@
 /*!
-Queries book data from OpenLibrary using the [`Client`](struct@Client) implementation of [`BookClient`](trait@BookClient).
+Queries book data from OpenLibrary using the [`Client`](struct@Client)
+implementation of [`BookClient`](trait@BookClient).
 
 Three different API calls are made to query all the needed data, and their data
 is then aggregated to return a single book.
@@ -101,7 +102,9 @@ impl Client {
         response: reqwest::Response,
     ) -> Result<reqwest::Response, ClientError> {
         let status_code = response.status().as_u16();
-        if status_code == 429 || status_code == 403 {
+        if status_code == 404 {
+            Err(ClientError::NotFound)
+        } else if status_code == 429 || status_code == 403 {
             Err(ClientError::RateLimitExceeded)
         } else if status_code < 200 || status_code >= 300 {
             let response_body = response.text().await?;
@@ -115,15 +118,15 @@ impl Client {
         self.http_client.get(url).send().await
     }
 
-    async fn fetch_book_by_isbn(&self, isbn: &str) -> Result<Option<BookResponse>, ClientError> {
+    async fn fetch_book_by_isbn(&self, isbn: &str) -> Result<BookResponse, ClientError> {
         let response = self
             .send_request(&format!("{}{}/{}.json", self.api_url, ISBN_PATH, isbn))
             .await?;
         if response.status().as_u16() == 404 {
             log::debug!("book with ISBN({}) not found on Open Library", isbn);
-            return Ok(None);
+            return Err(ClientError::NotFound);
         }
-        Ok(Some(self.handle_response(response).await?.json().await?))
+        Ok(self.handle_response(response).await?.json().await?)
     }
 
     async fn fetch_work(&self, work_path: &str) -> Result<WorkResponse, ClientError> {
@@ -143,30 +146,21 @@ impl Client {
         Ok(self.handle_response(response).await?.json().await?)
     }
 
-    async fn fetch_book(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
-        let book_response = match self.fetch_book_by_isbn(isbn).await? {
-            Some(book_response) => book_response,
-            None => {
-                return Ok(None);
-            }
-        };
+    async fn fetch_book(&self, isbn: &str) -> Result<Book, ClientError> {
+        let book_response = self.fetch_book_by_isbn(isbn).await?;
 
         if book_response.works.is_empty() {
             log::debug!(
                 "no works identifier found for book with ISBN({}) on Open Library",
                 isbn
             );
-            return Ok(None);
+            return Err(ClientError::NotFound);
         }
         let works_path = &book_response.works[0].key;
         let work_response = self.fetch_work(works_path).await?;
         let ratings_response = self.fetch_rating(works_path).await?;
 
-        Ok(Some(self.create_book(
-            &book_response,
-            &work_response,
-            &ratings_response,
-        )))
+        Ok(self.create_book(&book_response, &work_response, &ratings_response))
     }
 }
 
@@ -180,16 +174,14 @@ impl BookClient for Client {
     /// 3. /ratings
     ///
     /// If an error occurs with the communication, an HTTP status code that is not 200 is returned,
-    /// or the rate limit is exceeded then an error is returned.
-    /// For cases when the book is not found and 404 is returned from the API, then
-    /// `Ok(None)` is returned.
-    async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
+    /// the book is not found, or the rate limit is exceeded then an error is returned.
+    async fn book_by_isbn(&self, isbn: &str) -> Result<Book, ClientError> {
         self.fetch_book(isbn).await
     }
 
     /// The method to retrieve book information by author and title is not supported by OpenLibrary,
-    /// so `Ok(None)` is returned all the time that this method is called.
-    async fn book(&self, _author: &str, _title: &str) -> Result<Option<Book>, ClientError> {
-        Ok(None)
+    /// so this method calls [`unimplemented!`](macro@unimplemeted) directly.
+    async fn book(&self, _author: &str, _title: &str) -> Result<Book, ClientError> {
+        unimplemented!("not supported by third-party");
     }
 }

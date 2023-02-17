@@ -59,8 +59,7 @@ async fn fetch_book_by_isbn() {
     let book = client
         .book_by_isbn(isbn)
         .await
-        .expect("could not get book by isbn")
-        .expect("book should not be empty");
+        .expect("could not get book by isbn");
 
     m.assert();
     assert_book_equality(book);
@@ -83,8 +82,7 @@ async fn fetch_book_by_name_and_author() {
     let book = client
         .book(author, title)
         .await
-        .expect("could not get book by title and author")
-        .expect("book should not be empty");
+        .expect("could not get book by title and author");
 
     m.assert();
     assert_book_equality(book);
@@ -98,14 +96,14 @@ async fn handle_empty_book_response() {
     let m = create_mock(&server, &format!("isbn:{}", isbn), 200, "{}");
 
     let client = create_client(&server);
-    let book = client
-        .book_by_isbn(isbn)
-        .await
-        .expect("could not get book by isbn");
+    let book = client.book_by_isbn(isbn).await;
 
     m.assert();
 
-    assert!(book.is_none())
+    let _returned_error = book
+        .err()
+        .expect("error not returned when expected for missing book");
+    assert!(matches!(ClientError::NotFound, _returned_error));
 }
 
 #[tokio::test]

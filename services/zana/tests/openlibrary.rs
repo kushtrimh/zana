@@ -62,8 +62,7 @@ async fn assert_successful_fetch(
     let book = client
         .book_by_isbn(isbn)
         .await
-        .expect("could not get book by isbn")
-        .expect("book should not be empty");
+        .expect("could not get book by isbn");
 
     isbn_mock.assert();
     works_mock.assert();
@@ -139,13 +138,13 @@ async fn no_book_returned_on_404_from_isbn_call() {
     let isbn_mock = create_mock(&server, &format!("{}/{}.json", ISBN_PATH, isbn), 404, "");
 
     let client = create_client(&server);
-    let book = client
-        .book_by_isbn(isbn)
-        .await
-        .expect("could not get book by isbn");
+    let book = client.book_by_isbn(isbn).await;
 
     isbn_mock.assert();
-    assert!(book.is_none());
+    let _returned_error = book
+        .err()
+        .expect("error not returned when expected for missing book on isbn call");
+    assert!(matches!(ClientError::NotFound, _returned_error));
 }
 
 #[tokio::test]
@@ -161,13 +160,13 @@ async fn no_book_returned_when_works_key_missing() {
     );
 
     let client = create_client(&server);
-    let book = client
-        .book_by_isbn(isbn)
-        .await
-        .expect("could not get book by isbn");
+    let book = client.book_by_isbn(isbn).await;
 
     isbn_mock.assert();
-    assert!(book.is_none());
+    let _returned_error = book
+        .err()
+        .expect("error not returned when expected for missing works key");
+    assert!(matches!(ClientError::NotFound, _returned_error));
 }
 
 #[tokio::test]
@@ -222,4 +221,15 @@ async fn handle_other_http_error() {
             }
         }
     }
+}
+
+#[tokio::test]
+#[should_panic]
+async fn panics_when_querying_book_by_author_and_title() {
+    let author = "Author 1";
+    let title = "Title 1";
+
+    let server = MockServer::start();
+    let client = create_client(&server);
+    let _ = client.book(author, title).await;
 }
