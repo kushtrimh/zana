@@ -1,3 +1,35 @@
+/*!
+Queries book data from OpenLibrary using the [`Client`](struct@Client) implementation of [`BookClient`](trait@BookClient).
+
+Three different API calls are made to query all the needed data, and their data
+is then aggregated to return a single book.
+1. At first it queries the book by ISBN.
+2. Then queries the `work` endpoint, to retrieve more data about the book,
+its authors and description.
+3. Queries ratings.
+
+## Example
+
+```
+use zana::{Book, BookClient, ClientError};
+use zana::openlibrary::Client;
+
+let api_url = "https://openlibrary.org";
+let isbn = "9780316387316";
+
+let client = Client::new(api_url)?;
+
+let book: Option<Book> = match client.book_by_isbn(isbn) {
+    Ok(book) => book,
+    Err(err) => panic!("could not fetch book by ISBN {:?}", err),
+};
+
+if let Some(book) = book {
+    println!("book found ({}: {})", isbn, &book);
+}
+```
+*/
+
 use async_trait::async_trait;
 use serde::Deserialize;
 
@@ -45,12 +77,16 @@ struct RatingSummary {
     count: u32,
 }
 
+/// Client used to retrieve data from OpenLibrary API.
 pub struct Client {
     api_url: String,
     http_client: reqwest::Client,
 }
 
 impl Client {
+    /// Returns a new client that will make requests to the given API URL.
+    ///
+    /// No API key is required for OpenLibrary.
     pub fn new(api_url: &str) -> Result<Self, ClientError> {
         let http_client = create_http_client()?;
         Ok(Client {
@@ -155,10 +191,23 @@ impl Client {
 
 #[async_trait]
 impl BookClient for Client {
+    /// Returns a book by ISBN.
+    ///
+    /// Queries 3 different endpoints to retrieve all the needed data.
+    /// 1. /books
+    /// 2. /works
+    /// 3. /ratings
+    ///
+    /// If an error occurs with the communication, an HTTP status code that is not 200 is returned,
+    /// or the rate limit is exceeded then an error is returned.
+    /// For cases when the book is not found and 404 is returned from the API, then
+    /// `Ok(None)` is returned.
     async fn book_by_isbn(&self, isbn: &str) -> Result<Option<Book>, ClientError> {
         self.fetch_book(isbn).await
     }
 
+    /// The method to retrieve book information by author and title is not supported by OpenLibrary,
+    /// so `Ok(None)` is returned all the time that this method is called.
     async fn book(&self, _author: &str, _title: &str) -> Result<Option<Book>, ClientError> {
         Ok(None)
     }
