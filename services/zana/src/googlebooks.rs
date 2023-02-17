@@ -3,27 +3,7 @@ Queries book data from Google Books API using the [`Client`](struct@Client) impl
 
 It queries the `volumes` endpoints to retrieve data about a book, its author and ratings.
 
-## Example
-
-```
-use zana::{Book, BookClient, ClientError};
-use zana::googlebooks::Client;
-
-let api_url = "https://www.googleapis.com";
-let api_key = "YOUR-API-KEY";
-let isbn = "9780316387316";
-
-let client = Client::new(api_key, api_url)?;
-
-let book: Option<Book> = match client.book_by_isbn(isbn) {
-    Ok(book) => book,
-    Err(err) => panic!("could not fetch book by ISBN {:?}", err),
-};
-
-if let Some(book) = book {
-    println!("book found ({}: {})", isbn, &book);
-}
-```
+See example [here](../index.html#example).
  */
 use async_trait::async_trait;
 use serde::Deserialize;

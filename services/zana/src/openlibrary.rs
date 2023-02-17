@@ -8,27 +8,8 @@ is then aggregated to return a single book.
 its authors and description.
 3. Queries ratings.
 
-## Example
-
-```
-use zana::{Book, BookClient, ClientError};
-use zana::openlibrary::Client;
-
-let api_url = "https://openlibrary.org";
-let isbn = "9780316387316";
-
-let client = Client::new(api_url)?;
-
-let book: Option<Book> = match client.book_by_isbn(isbn) {
-    Ok(book) => book,
-    Err(err) => panic!("could not fetch book by ISBN {:?}", err),
-};
-
-if let Some(book) = book {
-    println!("book found ({}: {})", isbn, &book);
-}
-```
-*/
+See example [here](../index.html#example-1).
+ */
 
 use async_trait::async_trait;
 use serde::Deserialize;

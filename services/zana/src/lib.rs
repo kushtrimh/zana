@@ -19,19 +19,25 @@ then book title and author are used as a backup.
 use zana::{Book, BookClient, ClientError};
 use zana::googlebooks::Client;
 
-let api_url = "https://www.googleapis.com";
-let api_key = "YOUR-API-KEY";
-let isbn = "9780316387316";
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let api_url = "https://www.googleapis.com";
+    let api_key = "YOUR-API-KEY";
+    let isbn = "9780316387316";
 
-let client = Client::new(api_key, api_url)?;
+    let client = Client::new(api_key, api_url)?;
 
-let book: Option<Book> = match client.book_by_isbn(isbn) {
-    Ok(book) => book,
-    Err(err) => panic!("could not fetch book by ISBN {:?}", err),
-};
-
-if let Some(book) = book {
-    println!("book found ({}: {})", isbn, &book);
+    match client.book_by_isbn(isbn).await {
+        Ok(book) => {
+            if let Some(book) = book {
+                println!("book found ({}: {:?})", isbn, &book);
+            } else {
+                eprintln!("book ({}) not found", isbn);
+            }
+        },
+        Err(err) => eprintln!("could not fetch book by ISBN {:?}", err),
+    };
+    Ok(())
 }
 ```
 
@@ -48,18 +54,24 @@ For OpenLibrary, three separate API calls need to be made by [`Client`](struct@o
 use zana::{Book, BookClient, ClientError};
 use zana::openlibrary::Client;
 
-let api_url = "https://openlibrary.org";
-let isbn = "9780316387316";
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let api_url = "https://openlibrary.org";
+    let isbn = "9780316387316";
 
-let client = Client::new(api_url)?;
+    let client = Client::new(api_url)?;
 
-let book: Option<Book> = match client.book_by_isbn(isbn) {
-    Ok(book) => book,
-    Err(err) => panic!("could not fetch book by ISBN {:?}", err),
-};
-
-if let Some(book) = book {
-    println!("book found ({}: {})", isbn, &book);
+    match client.book_by_isbn(isbn).await {
+        Ok(book) => {
+            if let Some(book) = &book {
+                println!("book found ({}: {:?})", isbn, &book);
+            } else {
+                println!("book ({}) not found", isbn);
+            }
+        },
+        Err(err) => panic!("could not fetch book by ISBN {:?}", err),
+    };
+    Ok(())
 }
 ```
 
