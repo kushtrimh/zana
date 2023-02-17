@@ -1,33 +1,45 @@
+/*!
+Queries book data from Google Books API using the [`Client`](struct@Client)
+implementation of [`BookClient`](trait@BookClient).
+
+It queries the `volumes` endpoints to retrieve data about a book, its author and ratings.
+
+See example [here](../index.html#example).
+ */
+use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::ClientError;
+use crate::{create_http_client, Book, BookClient, ClientError, Rating};
 
 const VOLUMES_PATH: &str = "/books/v1/volumes";
 
 #[derive(Deserialize, Debug)]
-pub struct Volume {
-    pub items: Option<Vec<VolumeItem>>,
+struct Volume {
+    items: Option<Vec<VolumeItem>>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct VolumeItem {
+struct VolumeItem {
     #[serde(rename(deserialize = "volumeInfo"))]
-    pub info: VolumeInfo,
+    info: VolumeInfo,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct VolumeInfo {
-    pub title: String,
-    pub authors: Vec<String>,
-    pub description: String,
+struct VolumeInfo {
+    #[serde(rename(deserialize = "title"))]
+    _title: String,
+    #[serde(rename(deserialize = "authors"))]
+    _authors: Vec<String>,
+    description: String,
     #[serde(rename(deserialize = "pageCount"))]
-    pub page_count: u32,
+    page_count: u32,
     #[serde(rename(deserialize = "averageRating"))]
-    pub average_rating: f32,
+    average_rating: f32,
     #[serde(rename(deserialize = "ratingsCount"))]
-    pub ratings_count: u32,
+    ratings_count: u32,
 }
 
+/// Client used to retrieve data from Google Books API.
 pub struct Client {
     api_key: String,
     api_url: String,
@@ -35,12 +47,10 @@ pub struct Client {
 }
 
 impl Client {
+    /// Returns a new client that will make requests using the given API key to
+    /// the given API URL.
     pub fn new(api_key: &str, api_url: &str) -> Result<Self, ClientError> {
-        let version: &str = option_env!("CARGO_PKG_VERSION").unwrap_or("1.0.0");
-
-        let http_client = reqwest::Client::builder()
-            .user_agent(format!("zana/{} (gzip)", version))
-            .build()?;
+        let http_client = create_http_client()?;
         Ok(Client {
             api_key: String::from(api_key),
             api_url: String::from(api_url),
@@ -48,16 +58,23 @@ impl Client {
         })
     }
 
-    pub async fn volume_by_isbn(&self, isbn: &str) -> Result<Volume, ClientError> {
-        self.fetch_volume(&format!("isbn:{}", isbn)).await
+    fn create_book(&self, items: Vec<VolumeItem>) -> Result<Book, ClientError> {
+        if items.is_empty() {
+            return Err(ClientError::NotFound);
+        }
+
+        let volume_item = &items[0];
+        let volume_info = &volume_item.info;
+
+        let rating = Rating::new(volume_info.average_rating, volume_info.ratings_count);
+        Ok(Book::new_with_rating(
+            volume_info.page_count,
+            &volume_info.description,
+            rating,
+        ))
     }
 
-    pub async fn volume(&self, author: &str, title: &str) -> Result<Volume, ClientError> {
-        self.fetch_volume(&format!("inauthor:{} intitle:{}", author, title))
-            .await
-    }
-
-    async fn fetch_volume(&self, query: &str) -> Result<Volume, ClientError> {
+    async fn fetch_book(&self, query: &str) -> Result<Book, ClientError> {
         let query_list: Vec<(&str, &str)> = vec![
             ("key", &self.api_key),
             ("maxResults", "1"),
@@ -81,8 +98,33 @@ impl Client {
             return Err(ClientError::Http(status_code, response_body));
         }
 
-        let volume = response.json().await?;
+        let volume: Volume = response.json().await?;
 
-        Ok(volume)
+        if let Some(items) = volume.items {
+            return self.create_book(items);
+        }
+        Err(ClientError::NotFound)
+    }
+}
+
+#[async_trait]
+impl BookClient for Client {
+    /// Returns a book by ISBN.
+    ///
+    /// Volumes endpoint of Google Books API is queried.
+    /// If an error occurs with the communication, an HTTP status code that is not 200 is returned,
+    /// the book is not found, or the rate limit is exceeded then an error is returned.
+    async fn book_by_isbn(&self, isbn: &str) -> Result<Book, ClientError> {
+        self.fetch_book(&format!("isbn:{}", isbn)).await
+    }
+
+    /// Returns a book by author and title.
+    ///
+    /// Volumes endpoint of Google Books API is queried.
+    /// If an error occurs with the communication, an HTTP status code that is not 200 is returned,
+    /// the book is not found, or the rate limit is exceeded then an error is returned.
+    async fn book(&self, author: &str, title: &str) -> Result<Book, ClientError> {
+        self.fetch_book(&format!("inauthor:{} intitle:{}", author, title))
+            .await
     }
 }

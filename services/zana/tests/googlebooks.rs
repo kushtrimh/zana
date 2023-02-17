@@ -1,35 +1,26 @@
-use std::fs;
+mod util;
 
 use httpmock::prelude::*;
 use httpmock::Mock;
 
-use zana::googlebooks::{Client, Volume};
-use zana::ClientError;
+use crate::util::get_sample;
+use zana::googlebooks::Client;
+use zana::{Book, BookClient, ClientError};
 
 const API_KEY: &str = "b85a45ddd5a99124cf4ec9a74f93fcf1";
 const VOLUME_PATH: &str = "/books/v1/volumes";
-
-fn get_sample(sample: &str) -> String {
-    fs::read_to_string(format!("tests/sample/{}", sample)).expect("could not read sample file")
-}
 
 fn create_client(server: &MockServer) -> Client {
     Client::new(API_KEY, &format!("http://{}", &server.address())).expect("could not create client")
 }
 
-fn assert_volume_equality(volume: Volume) {
-    let volume_item = &volume.items.expect("item should exist")[0];
-    let volume_info = &volume_item.info;
+fn assert_book_equality(book: Book) {
+    let rating = book.rating.expect("ratings should exist");
 
-    assert_eq!("Joe Abercrombie", volume_info.authors[0]);
-    assert_eq!("The Blade Itself", volume_info.title);
-    assert_eq!(560, volume_info.page_count);
-    assert_eq!(3.5, volume_info.average_rating);
-    assert_eq!(107, volume_info.ratings_count);
-    assert_eq!(
-        "The first novel in the First Law Trilogy",
-        volume_info.description
-    );
+    assert_eq!(560, book.page_count);
+    assert_eq!(book.description, "The first novel in the First Law Trilogy",);
+    assert_eq!(3.5, rating.average_rating);
+    assert_eq!(107, rating.ratings_count);
 }
 
 fn create_mock<'a>(
@@ -53,7 +44,7 @@ fn create_mock<'a>(
 }
 
 #[tokio::test]
-async fn retrieve_volume_by_isbn() {
+async fn fetch_book_by_isbn() {
     let isbn = "9780316387316";
 
     let server = MockServer::start();
@@ -65,17 +56,17 @@ async fn retrieve_volume_by_isbn() {
     );
 
     let client = create_client(&server);
-    let volume = client
-        .volume_by_isbn(isbn)
+    let book = client
+        .book_by_isbn(isbn)
         .await
-        .expect("could not get volume by isbn");
+        .expect("could not get book by isbn");
 
     m.assert();
-    assert_volume_equality(volume);
+    assert_book_equality(book);
 }
 
 #[tokio::test]
-async fn retrieve_volume_by_name_and_author() {
+async fn fetch_book_by_name_and_author() {
     let author = "Joe Abercrombie";
     let title = "The Blade Itself";
 
@@ -88,31 +79,31 @@ async fn retrieve_volume_by_name_and_author() {
     );
 
     let client = create_client(&server);
-    let volume = client
-        .volume(author, title)
+    let book = client
+        .book(author, title)
         .await
-        .expect("could not get volume by title and author");
+        .expect("could not get book by title and author");
 
     m.assert();
-    assert_volume_equality(volume);
+    assert_book_equality(book);
 }
 
 #[tokio::test]
-async fn handle_empty_volume_response() {
+async fn handle_empty_book_response() {
     let isbn = "9780316387316";
 
     let server = MockServer::start();
     let m = create_mock(&server, &format!("isbn:{}", isbn), 200, "{}");
 
     let client = create_client(&server);
-    let volume = client
-        .volume_by_isbn(isbn)
-        .await
-        .expect("could not get volume by isbn");
+    let book = client.book_by_isbn(isbn).await;
 
     m.assert();
 
-    assert!(volume.items.is_none())
+    let _returned_error = book
+        .err()
+        .expect("error not returned when expected for missing book");
+    assert!(matches!(ClientError::NotFound, _returned_error));
 }
 
 #[tokio::test]
@@ -124,10 +115,10 @@ async fn return_rate_limit_error() {
         let m = create_mock(&server, &format!("isbn:{}", isbn), status_code, "");
 
         let client = create_client(&server);
-        let volume = client.volume_by_isbn(isbn).await;
+        let book = client.book_by_isbn(isbn).await;
 
         m.assert();
-        let _returned_error = volume.err().expect(&format!(
+        let _returned_error = book.err().expect(&format!(
             "error not returned when expected for status {}",
             status_code
         ));
@@ -149,12 +140,10 @@ async fn handle_other_http_error() {
     );
 
     let client = create_client(&server);
-    let volume = client.volume_by_isbn(isbn).await;
+    let book = client.book_by_isbn(isbn).await;
 
     m.assert();
-    let returned_error = volume
-        .err()
-        .expect(&format!("error not returned when expected"));
+    let returned_error = book.err().expect("error not returned when expected");
     match returned_error {
         ClientError::Http(status_code, _) => {
             assert_eq!(expected_status_code, status_code);
