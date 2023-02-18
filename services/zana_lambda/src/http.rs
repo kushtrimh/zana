@@ -73,7 +73,7 @@ pub struct FailureResponse {
 impl FailureResponse {
     fn new(error: &ResponseError) -> Self {
         FailureResponse {
-            error: String::from(error.to_string()),
+            error: error.to_string(),
             details: String::from(error.details()),
         }
     }
