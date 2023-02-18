@@ -13,4 +13,5 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["f
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.92"
 zana = { path = "../zana" }
+thiserror = "1.0.38"
 

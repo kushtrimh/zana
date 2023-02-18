@@ -1,31 +1,40 @@
 extern crate core;
 
 mod book;
+mod http;
 
 use std::env;
 
+use crate::book::Client;
+use crate::http::{failure_response, success_response, RequestType, ResponseError};
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
-use zana::googlebooks::Client;
-
-use crate::book::{fail_response, fetch_volume, ResponseError};
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
+    // TODO: Get this from parameter store
     let gbooks_api_key = env::var("GOOGLEBOOKS_API_KEY").expect("API key env variable required");
     let gbooks_api_url = env::var("GOOGLEBOOKS_API_URL").expect("API URL env variable required");
 
-    let client = Client::new(&gbooks_api_key, &gbooks_api_url)?;
-
-    let isbn = match event.query_string_parameters().first("isbn") {
-        Some(isbn) => isbn.to_string(),
+    let request_type: RequestType = match event.query_string_parameters().first("type") {
+        Some(request_type) => match request_type.parse() {
+            Ok(request_type) => request_type,
+            Err(_) => {
+                return failure_response(ResponseError::MissingParameter(String::from(
+                    "Invalid type",
+                )))
+            }
+        },
         None => {
-            return fail_response(
-                400,
-                ResponseError::MissingParameter,
-                "ISBN is required to retrieve book data",
-            );
+            return failure_response(ResponseError::MissingParameter(String::from(
+                "Type is required",
+            )))
         }
     };
 
+    let isbn = event
+        .query_string_parameters()
+        .first("isbn")
+        .unwrap_or("")
+        .to_string();
     let author = event
         .query_string_parameters()
         .first("author")
@@ -37,11 +46,43 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
         .unwrap_or("")
         .to_string();
 
-    match fetch_volume(client, &isbn, &author, &title).await {
-        Ok(response) => Ok(response),
+    let client = Client::new(("", ""), "");
+
+    match client {
+        Ok(client) => {
+            let query = if isbn != "" {
+                log::debug!("fetching book by isbn {} for {:?}", isbn, &request_type);
+                client.fetch_by_isbn(&request_type, &isbn).await
+            } else if author != "" && title != "" {
+                log::debug!(
+                    "fetching book by title {} and author {} for {:?}",
+                    title,
+                    author,
+                    &request_type
+                );
+                client
+                    .fetch_by_title_and_author(&request_type, &title, &author)
+                    .await
+            } else {
+                return failure_response(ResponseError::MissingParameter(String::from(
+                    "Either ISBN or title and author must be provided",
+                )));
+            };
+            match query {
+                Ok(book) => success_response(&book),
+                Err(err) => {
+                    log::error!("could not fetch book for {:?}, {:?}", &request_type, err);
+                    failure_response(err)
+                }
+            }
+        }
         Err(err) => {
-            log::error!("could not retrieve data {:?}", err);
-            fail_response(503, ResponseError::ServiceError, "Could not retrieve data")
+            log::error!(
+                "could not create client for type {:?}, {:?}",
+                &request_type,
+                err
+            );
+            failure_response(ResponseError::ServiceError)
         }
     }
 }
