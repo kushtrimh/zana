@@ -1,5 +1,5 @@
 use crate::http::{RequestType, ResponseError};
-use zana::{googlebooks, openlibrary, Book, BookClient, ClientError};
+use zana::{Book, BookClient};
 
 pub type BookApiClient = dyn BookClient + Send + Sync;
 
@@ -10,21 +10,13 @@ pub struct Client {
 
 impl Client {
     pub fn new(
-        google_books_data: (&str, &str),
-        open_library_api_url: &str,
-    ) -> Result<Self, ClientError> {
-        let (googlebooks_api_key, googlebooks_api_url) = google_books_data;
-        let googlebooks_client =
-            googlebooks::Client::new(googlebooks_api_key, googlebooks_api_url)?;
-        let googlebooks_client = Box::new(googlebooks_client);
-
-        let openlibrary_client = openlibrary::Client::new(open_library_api_url)?;
-        let openlibrary_client = Box::new(openlibrary_client);
-
-        Ok(Self {
-            openlibrary_client,
+        googlebooks_client: Box<BookApiClient>,
+        openlibrary_client: Box<BookApiClient>,
+    ) -> Self {
+        Self {
             googlebooks_client,
-        })
+            openlibrary_client,
+        }
     }
 
     fn client_from_type(&self, request_type: &RequestType) -> &BookApiClient {

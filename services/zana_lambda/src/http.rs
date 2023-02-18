@@ -30,7 +30,6 @@ impl FromStr for RequestType {
 pub enum ResponseError {
     MissingParameter(String),
     HttpClientError(#[from] ClientError),
-    ServiceError,
 }
 
 impl ResponseError {
@@ -43,7 +42,6 @@ impl ResponseError {
                 ClientError::NotFound => 404,
                 ClientError::Http(status_code, _) => *status_code,
             },
-            _ => 500,
         }
     }
 
@@ -56,7 +54,6 @@ impl ResponseError {
                 ClientError::NotFound => "Book not found",
                 ClientError::Http(_, details) => details,
             },
-            _ => "Something went wrong, please try again later",
         }
     }
 }
