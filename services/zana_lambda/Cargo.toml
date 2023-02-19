@@ -17,3 +17,6 @@ thiserror = "1.0.38"
 reqwest = "0.11.14"
 async-trait = "0.1.64"
 
+[dev-dependencies]
+httpmock = "0.6.7"
+
