@@ -1,19 +1,30 @@
 extern crate core;
 
-mod book;
-mod http;
-
 use std::env;
 
-use crate::book::Client;
-use crate::http::{failure_response, success_response, RequestType, ResponseError};
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
 use zana::{googlebooks, openlibrary};
 
+use crate::book::Client;
+use crate::http::{failure_response, success_response, RequestType, ResponseError};
+use crate::params::{AWSParamStore, ParamStore};
+
+mod book;
+mod http;
+mod params;
+
+// TODO: test this with httpmock, we would need to mock http requests and
+
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    // TODO: Get this from parameter store
-    let gbooks_api_key = env::var("GOOGLEBOOKS_API_KEY").expect("API key env variable required");
-    let gbooks_api_url = env::var("GOOGLEBOOKS_API_URL").expect("API URL env variable required");
+    let parameter_store_port =
+        env::var("PARAMETERS_SECRETS_EXTENSION_HTTP_PORT").expect("API key env variable required");
+    let aws_token =
+        env::var("AWS_SESSION_TOKEN").expect("environment variable 'AWS_SESSION_TOKEN' not set");
+    let zana_env = env::var("ZANA_ENV").expect("environment variable 'ZANA_ENV' not set");
+    let parameter_store_url = format!(
+        "http://localhost:{}/systemsmanager/parameters/get",
+        parameter_store_port
+    );
 
     let request_type: RequestType = match event.query_string_parameters().first("type") {
         Some(request_type) => match request_type.parse() {
@@ -21,13 +32,13 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
             Err(_) => {
                 return failure_response(ResponseError::MissingParameter(String::from(
                     "Invalid type",
-                )))
+                )));
             }
         },
         None => {
             return failure_response(ResponseError::MissingParameter(String::from(
                 "Type is required",
-            )))
+            )));
         }
     };
 
@@ -47,14 +58,25 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
         .unwrap_or("")
         .to_string();
 
-    let googlebooks_client = match googlebooks::Client::new("key", "url") {
+    let param_store = AWSParamStore::new(&parameter_store_url, &aws_token, &zana_env);
+    let googlebooks_url: String = param_store
+        .parameter("/zana/google-books-url", false)
+        .await?;
+    let googlebooks_key: String = param_store
+        .parameter("/zana/google-books-key", true)
+        .await?;
+    let openlibrary_url: String = param_store
+        .parameter("/zana/openlibrary-url", false)
+        .await?;
+
+    let googlebooks_client = match googlebooks::Client::new(&googlebooks_key, &googlebooks_url) {
         Ok(client) => Box::new(client),
-        Err(err) => return failure_response(ResponseError::HttpClientError(err)),
+        Err(err) => return failure_response(ResponseError::BookClientError(err)),
     };
 
-    let openlibrary_client = match openlibrary::Client::new("url") {
+    let openlibrary_client = match openlibrary::Client::new(&openlibrary_url) {
         Ok(client) => Box::new(client),
-        Err(err) => return failure_response(ResponseError::HttpClientError(err)),
+        Err(err) => return failure_response(ResponseError::BookClientError(err)),
     };
 
     let client = Client::new(googlebooks_client, openlibrary_client);
@@ -95,17 +117,18 @@ async fn main() -> Result<(), Error> {
         // disabling time is handy because CloudWatch will add the ingestion time.
         .without_time()
         .init();
-
     run(service_fn(function_handler)).await
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::function_handler;
+    use std::collections::HashMap;
+
     use lambda_http::aws_lambda_events::query_map::QueryMap;
     use lambda_http::http::StatusCode;
     use lambda_http::{Request, RequestExt};
-    use std::collections::HashMap;
+
+    use crate::function_handler;
 
     #[tokio::test]
     async fn sample_test() {

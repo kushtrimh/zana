@@ -1390,9 +1390,11 @@ dependencies = [
 name = "zana_lambda"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "lambda_http",
  "lambda_runtime",
  "log",
+ "reqwest",
  "serde",
  "serde_json",
  "thiserror",

@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use zana::{Book, ClientError};
 
+// TODO: unit tests only here, no external calls made
+
 #[derive(Debug, PartialEq)]
 pub enum RequestType {
     GoogleBooks,
@@ -29,31 +31,51 @@ impl FromStr for RequestType {
 #[derive(Error, Debug)]
 pub enum ResponseError {
     MissingParameter(String),
-    HttpClientError(#[from] ClientError),
+    BookClientError(#[from] ClientError),
+    HttpClientError(#[from] reqwest::Error),
+    ServiceError,
 }
 
 impl ResponseError {
-    fn status(&self) -> u16 {
+    fn status_and_details(&self) -> (u16, &str) {
         match self {
-            ResponseError::MissingParameter(_) => 400,
-            ResponseError::HttpClientError(err) => match err {
-                ClientError::InternalClient(_) => 503,
-                ClientError::RateLimitExceeded => 429,
-                ClientError::NotFound => 404,
-                ClientError::Http(status_code, _) => *status_code,
-            },
-        }
-    }
-
-    fn details(&self) -> &str {
-        match self {
-            ResponseError::MissingParameter(details) => details,
-            ResponseError::HttpClientError(err) => match err {
-                ClientError::InternalClient(_) => "Could not retrieve data from external service",
-                ClientError::RateLimitExceeded => "Rate limit exceeded for external service",
-                ClientError::NotFound => "Book not found",
-                ClientError::Http(_, details) => details,
-            },
+            ResponseError::MissingParameter(details) => (400, details),
+            ResponseError::BookClientError(err) => {
+                let status_and_details = match err {
+                    ClientError::InternalClient(_) => {
+                        (503, "Could not retrieve data from external service")
+                    }
+                    ClientError::RateLimitExceeded => {
+                        (429, "Rate limit exceeded for external service")
+                    }
+                    ClientError::NotFound => (404, "Book not found"),
+                    ClientError::Http(status_code, details) => (*status_code, details.as_str()),
+                };
+                log::error!(
+                    "book client error {}/{}: {}",
+                    status_and_details.0,
+                    status_and_details.1,
+                    err
+                );
+                status_and_details
+            }
+            ResponseError::HttpClientError(err) => {
+                let status_and_details = match err.status() {
+                    Some(status_code) => (
+                        status_code.as_u16(),
+                        "Something went wrong, please try again.",
+                    ),
+                    None => (500, "Something went wrong, please try again."),
+                };
+                log::error!(
+                    "http client error {}/{}: {}",
+                    status_and_details.0,
+                    status_and_details.1,
+                    err
+                );
+                status_and_details
+            }
+            _ => (500, "Something went wrong, please try again."),
         }
     }
 }
@@ -70,11 +92,27 @@ pub struct FailureResponse {
     pub details: String,
 }
 
+impl fmt::Display for FailureResponse {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}] {}", self.error, self.details)
+    }
+}
+
+impl std::error::Error for FailureResponse {}
+
 impl FailureResponse {
-    fn new(error: &ResponseError) -> Self {
+    pub fn new_with_details(error_type: &ResponseError, details: &str) -> Self {
         FailureResponse {
-            error: error.to_string(),
-            details: String::from(error.details()),
+            error: error_type.to_string(),
+            details: String::from(details),
+        }
+    }
+
+    pub fn new(error_type: &ResponseError) -> Self {
+        let (_, details) = error_type.status_and_details();
+        FailureResponse {
+            error: error_type.to_string(),
+            details: String::from(details),
         }
     }
 }
@@ -122,11 +160,12 @@ impl RatingData {
 }
 
 pub fn failure_response(error: ResponseError) -> Result<Response<Body>, Error> {
-    let response = serde_json::to_string(&FailureResponse::new(&error))?;
+    let (status, details) = error.status_and_details();
+    let response = serde_json::to_string(&FailureResponse::new_with_details(&error, details))?;
 
     Ok(Response::builder()
         .header("content-type", "application/json")
-        .status(StatusCode::from_u16(error.status()).unwrap_or(StatusCode::SERVICE_UNAVAILABLE))
+        .status(StatusCode::from_u16(status).unwrap_or(StatusCode::SERVICE_UNAVAILABLE))
         .body(Body::Text(response))?)
 }
 

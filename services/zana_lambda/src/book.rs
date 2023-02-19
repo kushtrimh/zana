@@ -8,6 +8,8 @@ pub struct Client {
     openlibrary_client: Box<BookApiClient>,
 }
 
+// TODO: since we use trait objects here, we can leverage that for testing, no external calls made
+
 impl Client {
     pub fn new(
         googlebooks_client: Box<BookApiClient>,
