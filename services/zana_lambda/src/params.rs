@@ -3,8 +3,6 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde::Deserialize;
 
-// TODO: Test with httpmock, no other way of testing it as of right now
-
 const AWS_TOKEN_HEADER: &str = "X-Aws-Parameters-Secrets-Token";
 
 #[derive(Deserialize)]
