@@ -16,8 +16,8 @@ mod params;
 // TODO: test this with httpmock, we would need to mock http requests and
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    let parameter_store_port =
-        env::var("PARAMETERS_SECRETS_EXTENSION_HTTP_PORT").expect("API key env variable required");
+    let parameter_store_port = env::var("PARAMETERS_SECRETS_EXTENSION_HTTP_PORT")
+        .expect("environment variable 'PARAMETERS_SECRETS_EXTENSION_HTTP_PORT' not set");
     let aws_token =
         env::var("AWS_SESSION_TOKEN").expect("environment variable 'AWS_SESSION_TOKEN' not set");
     let zana_env = env::var("ZANA_ENV").expect("environment variable 'ZANA_ENV' not set");
