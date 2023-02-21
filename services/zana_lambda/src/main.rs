@@ -5,15 +5,9 @@ use std::env;
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
 use zana::{googlebooks, openlibrary};
 
-use crate::book::Client;
-use crate::http::{failure_response, success_response, RequestType, ResponseError};
-use crate::params::{AWSParamStore, ParamStore};
-
-mod book;
-mod http;
-mod params;
-
-// TODO: test this with httpmock, we would need to mock http requests and
+use zana_lambda::book::Client;
+use zana_lambda::http::{failure_response, success_response, RequestType, ResponseError};
+use zana_lambda::params::{AWSParamStore, ParamStore};
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     let parameter_store_port = env::var("PARAMETERS_SECRETS_EXTENSION_HTTP_PORT")
@@ -81,25 +75,10 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
 
     let client = Client::new(googlebooks_client, openlibrary_client);
 
-    let query = if !isbn.is_empty() {
-        log::debug!("fetching book by isbn {} for {:?}", isbn, &request_type);
-        client.fetch_by_isbn(&request_type, &isbn).await
-    } else if !author.is_empty() && !title.is_empty() {
-        log::debug!(
-            "fetching book by title {} and author {} for {:?}",
-            title,
-            author,
-            &request_type
-        );
-        client
-            .fetch_by_title_and_author(&request_type, &title, &author)
-            .await
-    } else {
-        return failure_response(ResponseError::MissingParameter(String::from(
-            "Either ISBN or title and author must be provided",
-        )));
-    };
-    match query {
+    let book = client
+        .fetch_book(&request_type, &isbn, &title, &author)
+        .await;
+    match book {
         Ok(book) => success_response(&book),
         Err(err) => {
             log::error!("could not fetch book for {:?}, {:?}", &request_type, err);
@@ -118,27 +97,4 @@ async fn main() -> Result<(), Error> {
         .without_time()
         .init();
     run(service_fn(function_handler)).await
-}
-
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-
-    use lambda_http::aws_lambda_events::query_map::QueryMap;
-    use lambda_http::http::StatusCode;
-    use lambda_http::{Request, RequestExt};
-
-    use crate::function_handler;
-
-    #[tokio::test]
-    async fn sample_test() {
-        let mut params: HashMap<String, String> = HashMap::new();
-        params.insert("type".to_string(), "test".to_string());
-        let request = Request::default().with_query_string_parameters(QueryMap::from(params));
-
-        match function_handler(request).await {
-            Ok(response) => assert_eq!(response.status(), StatusCode::BAD_REQUEST),
-            Err(err) => panic!("error {:?}", err),
-        };
-    }
 }

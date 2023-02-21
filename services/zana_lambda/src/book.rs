@@ -8,8 +8,6 @@ pub struct Client {
     openlibrary_client: Box<BookApiClient>,
 }
 
-// TODO: since we use trait objects here, we can leverage that for testing, no external calls made
-
 impl Client {
     pub fn new(
         googlebooks_client: Box<BookApiClient>,
@@ -55,6 +53,32 @@ impl Client {
             .client_from_type(request_type)
             .book(author, title)
             .await?)
+    }
+
+    pub async fn fetch_book(
+        &self,
+        request_type: &RequestType,
+        isbn: &str,
+        title: &str,
+        author: &str,
+    ) -> Result<Book, ResponseError> {
+        if !isbn.is_empty() {
+            log::debug!("fetching book by isbn {} for {:?}", isbn, &request_type);
+            self.fetch_by_isbn(&request_type, &isbn).await
+        } else if !author.is_empty() && !title.is_empty() {
+            log::debug!(
+                "fetching book by title {} and author {} for {:?}",
+                title,
+                author,
+                &request_type
+            );
+            self.fetch_by_title_and_author(&request_type, &title, &author)
+                .await
+        } else {
+            Err(ResponseError::MissingParameter(String::from(
+                "Either ISBN or title and author must be provided",
+            )))
+        }
     }
 }
 
