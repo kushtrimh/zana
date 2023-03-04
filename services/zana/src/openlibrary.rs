@@ -180,7 +180,7 @@ impl BookClient for Client {
     }
 
     /// The method to retrieve book information by author and title is not supported by OpenLibrary,
-    /// so this method calls [`unimplemented!`](macro@unimplemeted) directly.
+    /// so this method calls `unimplemented!` directly.
     async fn book(&self, _author: &str, _title: &str) -> Result<Book, ClientError> {
         unimplemented!("not supported by third-party");
     }
