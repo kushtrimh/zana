@@ -1,5 +1,5 @@
 /*!
-This create providers functionality to retrieve data from the following
+This crate provides functionality to retrieve data from the following
 book related APIs:
 - [OpenLibrary](https://openlibrary.org/)
 - [Google Books](https://developers.google.com/books)
@@ -160,7 +160,6 @@ impl Rating {
     }
 }
 
-#[async_trait]
 /// A trait that describes implementations of API clients for third-party API services.
 ///
 /// This trait provides a way to access different APIs and returns the data in a standard format.
@@ -169,12 +168,13 @@ impl Rating {
 /// This trait provides different ways of which the data can be retrieved.
 ///
 /// In cases where a third-party API does not support one of the ways to retrieve data,
-/// then [`unimplemented!`](macro@unimplemeted) is used, to indicate that
+/// then `unimplemented!` is used, to indicate that
 /// a [Book](struct@Book) cannot not be queried using that functionality.
 ///
 /// When there's an error with communication/network, and the request cannot be completed,
 /// the rate limit has been reached, the book could not be found,
 /// or a HTTP status code has been returned that is not 200, then an error will be returned.
+#[async_trait]
 pub trait BookClient {
     /// Returns a book from the given ISBN.
     async fn book_by_isbn(&self, isbn: &str) -> Result<Book, ClientError>;
@@ -187,6 +187,7 @@ fn create_http_client() -> Result<reqwest::Client, reqwest::Error> {
     let version: &str = option_env!("CARGO_PKG_VERSION").unwrap_or("1.0.0");
 
     reqwest::Client::builder()
+        .gzip(true)
         .user_agent(format!("zana/{} (gzip)", version))
         .timeout(Duration::from_secs(30))
         .connect_timeout(Duration::from_secs(30))

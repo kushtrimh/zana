@@ -2,65 +2,46 @@ extern crate core;
 
 use std::env;
 
-use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
+use lambda_http::{run, service_fn, Body, Error, Request, Response};
 use zana::{googlebooks, openlibrary};
 
 use zana_lambda::book::Client;
+use zana_lambda::http;
 use zana_lambda::http::{failure_response, success_response, RequestType, ResponseError};
 use zana_lambda::params::{AWSParamStore, ParamStore};
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
+    // Required env variables
+    let zana_env = env::var("ZANA_ENV").expect("environment variable 'ZANA_ENV' not set");
+
+    // Env variables set by AWS
     let parameter_store_port = env::var("PARAMETERS_SECRETS_EXTENSION_HTTP_PORT")
         .expect("environment variable 'PARAMETERS_SECRETS_EXTENSION_HTTP_PORT' not set");
     let aws_token =
         env::var("AWS_SESSION_TOKEN").expect("environment variable 'AWS_SESSION_TOKEN' not set");
-    let zana_env = env::var("ZANA_ENV").expect("environment variable 'ZANA_ENV' not set");
     let parameter_store_url = format!(
         "http://localhost:{}/systemsmanager/parameters/get",
         parameter_store_port
     );
 
-    let request_type: RequestType = match event.query_string_parameters().first("type") {
-        Some(request_type) => match request_type.parse() {
-            Ok(request_type) => request_type,
-            Err(_) => {
-                return failure_response(ResponseError::MissingParameter(String::from(
-                    "Invalid type",
-                )));
-            }
-        },
-        None => {
-            return failure_response(ResponseError::MissingParameter(String::from(
-                "Type is required",
-            )));
-        }
+    let request_type: RequestType = match http::request_type(&event) {
+        Ok(request_type) => request_type,
+        Err(err) => return failure_response(err),
     };
-
-    let isbn = event
-        .query_string_parameters()
-        .first("isbn")
-        .unwrap_or("")
-        .to_string();
-    let author = event
-        .query_string_parameters()
-        .first("author")
-        .unwrap_or("")
-        .to_string();
-    let title = event
-        .query_string_parameters()
-        .first("title")
-        .unwrap_or("")
-        .to_string();
+    let isbn = http::query_parameter(&event, "isbn", "");
+    let author = http::query_parameter(&event, "author", "");
+    let title = http::query_parameter(&event, "title", "");
 
     let param_store = AWSParamStore::new(&parameter_store_url, &aws_token, &zana_env);
-    let googlebooks_url: String = param_store
-        .parameter("/zana/google-books-url", false)
+
+    let googlebooks_url = param_store
+        .parameter_from_env("ZANA_GOOGLE_BOOKS_URL", "/zana/google-books-url", false)
         .await?;
     let googlebooks_key: String = param_store
-        .parameter("/zana/google-books-key", true)
+        .parameter_from_env("ZANA_GOOGLE_BOOKS_KEY", "/zana/google-books-key", true)
         .await?;
     let openlibrary_url: String = param_store
-        .parameter("/zana/openlibrary-url", false)
+        .parameter_from_env("ZANA_OPENLIBRARY_URL", "/zana/openlibrary-url", false)
         .await?;
 
     let googlebooks_client = match googlebooks::Client::new(&googlebooks_key, &googlebooks_url) {
@@ -81,7 +62,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     match book {
         Ok(book) => success_response(&book),
         Err(err) => {
-            log::error!("could not fetch book for {:?}, {:?}", &request_type, err);
+            tracing::error!("could not fetch book for {:?}, {:?}", &request_type, err);
             failure_response(err)
         }
     }
