@@ -139,3 +139,13 @@ async fn get_parameter_from_param_store_if_env_not_present() {
     let response = get_parameter(param_name, decrypt, "ZANA_NO_ENV", true).await;
     assert_eq!("param-value", response);
 }
+
+#[tokio::test]
+async fn get_parameter_from_param_store_if_env_not_present_and_decrypt_true() {
+    let param_name = "test/param-name";
+    let decrypt = true;
+
+    let response = get_parameter(param_name, decrypt, "ZANA_NO_ENV", true).await;
+
+    assert_eq!("param-value", response);
+}

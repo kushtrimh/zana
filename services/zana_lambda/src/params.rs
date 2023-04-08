@@ -147,7 +147,7 @@ impl ParamStore for AWSParamStore {
             Ok(value) => Ok(value),
             Err(_) => {
                 tracing::debug!("parameter {} not found as env variable. Retrieving from parameter store with {}/decryption: {}", env_variable, name, with_decryption);
-                self.parameter(name, false).await
+                self.parameter(name, with_decryption).await
             }
         }
     }

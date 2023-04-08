@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-lambda_http = { version = "0.7", default-features = false, features = ["apigw_http"] }
+lambda_http = { version = "0.7", default-features = false, features = ["apigw_rest"] }
 lambda_runtime = "0.7"
 log = "0.4.17"
 tokio = { version = "1", features = ["macros"] }
@@ -16,6 +16,7 @@ zana = { path = "../zana" }
 thiserror = "1.0.38"
 reqwest = "0.11.14"
 async-trait = "0.1.65"
+openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
 httpmock = "0.6.7"

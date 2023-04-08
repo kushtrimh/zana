@@ -22,13 +22,22 @@
 to provide retrieve parameters required to initialize clients for different providers, if those parameters are not provided as
 environment variables.
 
-`zana_lambda` uses the following parameter names to query parameter from the parameter store.
-- `/zana/google-books-url`
-- `/zana/google-books-key`
-- `/zana/openlibrary-url`
+`zana_lambda` uses the following parameter names to query parameter from the parameter store. `prod` represents the environment, and it should change
+based on the environment that is used.
+- `/zana/prod/google-books-url`
+- `/zana/prod/google-books-key`
+- `/zana/prod/openlibrary-url`
 
 Values of environment variable `ZANA_ENV` is used as a label when retrieving parameters, 
 in order to provide support for multiple environments at the same time.
+
+### Add to AWS Parameter Store for production
+
+```sh
+aws ssm put-parameter --name "/zana/prod/google-books-url" --value "VALUE-HERE" --type String
+aws ssm put-parameter --name "/zana/prod/google-books-key" --value "VALUE-HERE" --type SecureString
+aws ssm put-parameter --name "/zana/prod/openlibrary-url" --value "VALUE-HERE" --type String
+```
 
 ## Running locally
 

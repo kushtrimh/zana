@@ -203,6 +203,10 @@ Cargo.lock
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,java,node,maven
 
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
 # Custom
 
 .idea/
