@@ -38,11 +38,16 @@ jobs:
         run: cargo test --verbose
       - name: Build zana_lambda service
         working-directory: services/zana_lambda
-        run: cargo lambda build --verbose
+        run: cargo lambda build --release --output-format zip --verbose
       - name: Run tests in zana_lambda service
         working-directory: services/zana_lambda
         run: cargo test --verbose
       # Setup Java and run tests in zana_aws service
+      - name: Install Node.js toolchain
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci && npm install -g aws-cdk@2.67.0
       - name: Install Java 17 toolchain
         uses: actions/setup-java@v3
         with:
@@ -50,4 +55,4 @@ jobs:
           distribution: 'temurin'
       - name: Run tests in zana_aws service
         working-directory: deployment/zana_aws
-        run: mvn clean test
+        run: mvn clean compile && mvn clean test
