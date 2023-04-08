@@ -17,6 +17,19 @@ jobs:
     steps:
       # Setup Rust and run tests in zana and zana_lambda services
       - uses: actions/checkout@v3
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Zig toolchain
+        uses: korandoru/setup-zig@v1
+        with:
+          zig-version: 0.10.0
+      - name: Install Cargo Lambda
+        uses: jaxxstorm/action-install-gh-release@v1.9.0
+        with:
+          repo: cargo-lambda/cargo-lambda
+          tag: v0.19.0
+          platform: linux
+          arch: x86_64
       - name: Build zana service
         working-directory: services/zana
         run: cargo build --verbose
@@ -25,12 +38,12 @@ jobs:
         run: cargo test --verbose
       - name: Build zana_lambda service
         working-directory: services/zana_lambda
-        run: cargo build --verbose
+        run: cargo lambda build --verbose
       - name: Run tests in zana_lambda service
         working-directory: services/zana_lambda
         run: cargo test --verbose
       # Setup Java and run tests in zana_aws service
-      - name: Set up JDK 17
+      - name: Install Java 17 toolchain
         uses: actions/setup-java@v3
         with:
           java-version: '17'
