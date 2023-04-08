@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm ci && npm install -g aws-cdk@2.67.0
+      - run: npm install -g aws-cdk@2.67.0
       - name: Install Java 17 toolchain
         uses: actions/setup-java@v3
         with:
