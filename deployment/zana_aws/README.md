@@ -9,25 +9,24 @@
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
 
-Enjoy!
-
 ## What is required before
 
-- To have a hosted zone already
-- Certificate for *.zanareads.com in us-east-1, and create records for it in Route53
+- To have a hosted zone in Route53
+- Certificate for *.yourdomain.com in us-east-1, and create records for it in Route53
 - Params in param store
 
 ## Required parameters on Parameter store
 
-Add all parameters with the following label `prod`
+In this case `prod` is the env used.
 
 - `/zana/prod/google-books-url` - type: `String`, Google Books API URL
 - `/zana/prod/google-books-key` - type: `SecureString`, Google Books API key
 - `/zana/prod/openlibrary-url` - type: `String`, OpenLibrary URL
 
 - `/zana/prod/certificate-arn` - type: `String`, Certificate ARN from AWS Certificate Manager
-- `/zana/prod/api-domain` - type: `String`, API Domain name to be used by zana
+- `/zana/prod/api-host` - type: `String`, API host name to be used by zana
 - `/zana/prod/hosted-zone-id` - type: `String`, Route53 Hosted zone ID
 - `/zana/prod/hosted-zone-name` - type: `String`, Route54 Hosted zone name
-- `/zana/prod/cors-allow-origins` - type: `String`, Allowed origins
+- `/zana/prod/cors-allow-origins` - type: `String`, Comma seperated string of allowed origins
 - `/zana/prod/lambda-ssm-extension-arn` - type: `String`, ARN for Lambda SSM extension
+- `/zana/prod/lambda-insights-extension-arn` - type: `String`, ARN for Lambda Insights extension

@@ -15,16 +15,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build zana service
-      working-directory: services/zana
-      run: cargo build --verbose
-    - name: Run tests in zana service
-      working-directory: services/zana
-      run: cargo test --verbose
-    - name: Build zana_lambda service
-      working-directory: services/zana_lambda
-      run: cargo build --verbose
-    - name: Run tests in zana_lambda service
-      working-directory: services/zana_lambda
-      run: cargo test --verbose
+      # Setup Rust and run tests in zana and zana_lambda services
+      - uses: actions/checkout@v3
+      - name: Build zana service
+        working-directory: services/zana
+        run: cargo build --verbose
+      - name: Run tests in zana service
+        working-directory: services/zana
+        run: cargo test --verbose
+      - name: Build zana_lambda service
+        working-directory: services/zana_lambda
+        run: cargo build --verbose
+      - name: Run tests in zana_lambda service
+        working-directory: services/zana_lambda
+        run: cargo test --verbose
+      # Setup Java and run tests in zana_aws service
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Run tests in zana_aws service
+        working-directory: deployment/zana_aws
+        run: mvn clean test

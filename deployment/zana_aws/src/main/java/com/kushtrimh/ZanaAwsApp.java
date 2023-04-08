@@ -4,9 +4,11 @@ import software.amazon.awscdk.App;
 import software.amazon.awscdk.Environment;
 import software.amazon.awscdk.StackProps;
 
-import java.util.Map;
 import java.util.Optional;
 
+/**
+ * @author Kushtrim Hajrizi
+ */
 public class ZanaAwsApp {
     public static void main(final String[] args) {
         App app = new App();
@@ -23,10 +25,9 @@ public class ZanaAwsApp {
                         .account(account)
                         .region(region)
                         .build())
-                .tags(Map.of("zanaEnv", zanaEnv))
-                .build());
+                .build(),
+                zanaEnv);
 
         app.synth();
     }
 }
-
