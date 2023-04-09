@@ -5,7 +5,6 @@ use std::env;
 use zana_lambda::http::ResponseError;
 use zana_lambda::params::{AWSParamStore, ParamStore, AWS_TOKEN_HEADER};
 
-const TEST_ENV: &str = "test";
 const TOKEN: &str = "token-1234";
 const PARAM_STORE_RESPONSE_BODY: &str = "{\"Parameter\":{\"ARN\":\"arn:aws:ssm:us-east-2:111122223333:parameter/test/param-name\",\"DataType\":\"text\",\"LastModifiedDate\":1582657288.8,\"Name\":\"test/param-name\",\"Type\":\"SecureString\",\"Value\":\"param-value\",\"Version\":3}}";
 
@@ -19,7 +18,6 @@ fn create_mock<'a>(
     server.mock(|when, then| {
         when.method(GET)
             .query_param("name", name)
-            .query_param("label", TEST_ENV)
             .query_param("withDecryption", with_decryption.to_string().as_str())
             .header(AWS_TOKEN_HEADER, TOKEN);
         then.status(status_code)
@@ -29,11 +27,7 @@ fn create_mock<'a>(
 }
 
 fn create_param_store(server: &MockServer) -> AWSParamStore {
-    AWSParamStore::new(
-        &format!("http://{}", &server.address().to_string()),
-        TOKEN,
-        TEST_ENV,
-    )
+    AWSParamStore::new(&format!("http://{}", &server.address().to_string()), TOKEN)
 }
 
 async fn assert_fail(param_name: &str, decrypt: bool, status_code: u16, response_body: &str) {
@@ -79,7 +73,7 @@ async fn get_parameter(
 
 #[tokio::test]
 async fn return_error_when_request_cant_complete() {
-    let param_store = AWSParamStore::new("http://localhost/wrong/url/here", TOKEN, TEST_ENV);
+    let param_store = AWSParamStore::new("http://localhost/wrong/url/here", TOKEN);
     let response = param_store.parameter("test/param-name", false).await;
     match response {
         Ok(_) => panic!("successful response returned when error expected"),

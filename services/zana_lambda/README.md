@@ -4,7 +4,7 @@
 
 ### Required
 
-- `ZANA_ENV`, environment that is used on AWS Parameter Store queries as the `label` to provide support for same parameters on multiple environments.
+- `ZANA_ENV`, environment that is used on AWS Parameter Store queries as part of the key, to provide support for same parameters on multiple environments.
 
 ### Set automatically AWS Lambda runtime
 - `AWS_SESSION_TOKEN`, token used to access AWS Parameter Store.
@@ -28,7 +28,7 @@ based on the environment that is used.
 - `/zana/prod/google-books-key`
 - `/zana/prod/openlibrary-url`
 
-Values of environment variable `ZANA_ENV` is used as a label when retrieving parameters, 
+Values of environment variable `ZANA_ENV` is used as part of the key when retrieving parameter values, 
 in order to provide support for multiple environments at the same time.
 
 ### Add to AWS Parameter Store for production

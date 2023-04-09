@@ -64,12 +64,6 @@ impl ResponseError {
                     ClientError::NotFound => (404, "Book not found"),
                     ClientError::Http(status_code, details) => (*status_code, details.as_str()),
                 };
-                tracing::error!(
-                    "book client error {}/{}: {}",
-                    status_and_details.0,
-                    status_and_details.1,
-                    err
-                );
                 status_and_details
             }
             ResponseError::HttpClientError(err) => {
@@ -80,12 +74,6 @@ impl ResponseError {
                     ),
                     None => (500, "Something went wrong, please try again."),
                 };
-                tracing::error!(
-                    "http client error {}/{}: {}",
-                    status_and_details.0,
-                    status_and_details.1,
-                    err
-                );
                 status_and_details
             }
             _ => (500, "Something went wrong, please try again."),
