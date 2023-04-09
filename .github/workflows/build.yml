@@ -30,6 +30,14 @@ jobs:
           tag: v0.19.0
           platform: linux
           arch: x86_64
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-build-cache
       - name: Build zana service
         working-directory: services/zana
         run: cargo build --verbose
@@ -42,7 +50,8 @@ jobs:
       - name: Run tests in zana_lambda service
         working-directory: services/zana_lambda
         run: cargo test --verbose
-      # Setup Java and run tests in zana_aws service
+      # Setup NodeJs and Java
+      # Run tests in zana_aws service
       - name: Install Node.js toolchain
         uses: actions/setup-node@v3
         with:
