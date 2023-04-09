@@ -38,7 +38,7 @@ jobs:
         run: cargo test --verbose
       - name: Build zana_lambda service
         working-directory: services/zana_lambda
-        run: cargo lambda build --verbose
+        run: cargo lambda build --release --output-format zip --verbose
       - name: Run tests in zana_lambda service
         working-directory: services/zana_lambda
         run: cargo test --verbose
