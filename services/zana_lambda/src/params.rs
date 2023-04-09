@@ -61,7 +61,6 @@ pub struct AWSParamStore {
     param_store_get_url: String,
     client: Client,
     token: String,
-    env: String,
 }
 
 impl AWSParamStore {
@@ -69,13 +68,11 @@ impl AWSParamStore {
     ///
     /// * `param_store_url` is the url of AWS Parameter Store, as specified on AWS Parameter Store Lambda extension.
     /// * `token` is a required AWS token that is used for communication with AWS Parameter Store.
-    /// * `zana_env` will be used as a label to seperate different parameters based on different environments.
-    pub fn new(param_store_url: &str, token: &str, zana_env: &str) -> Self {
+    pub fn new(param_store_url: &str, token: &str) -> Self {
         Self {
             param_store_get_url: String::from(param_store_url),
             client: Client::new(),
             token: String::from(token),
-            env: String::from(zana_env),
         }
     }
 }
@@ -93,11 +90,8 @@ impl ParamStore for AWSParamStore {
         with_decryption: bool,
     ) -> Result<String, FailureResponse> {
         let with_decryption = with_decryption.to_string();
-        let query_params: Vec<(&str, &str)> = vec![
-            ("name", name),
-            ("label", &self.env),
-            ("withDecryption", with_decryption.as_str()),
-        ];
+        let query_params: Vec<(&str, &str)> =
+            vec![("name", name), ("withDecryption", with_decryption.as_str())];
 
         let response = self
             .client

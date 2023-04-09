@@ -32,16 +32,28 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     let author = http::query_parameter(&event, "author", "");
     let title = http::query_parameter(&event, "title", "");
 
-    let param_store = AWSParamStore::new(&parameter_store_url, &aws_token, &zana_env);
+    let param_store = AWSParamStore::new(&parameter_store_url, &aws_token);
 
     let googlebooks_url = param_store
-        .parameter_from_env("ZANA_GOOGLE_BOOKS_URL", "/zana/google-books-url", false)
+        .parameter_from_env(
+            "ZANA_GOOGLE_BOOKS_URL",
+            &format!("/zana/{}/google-books-url", &zana_env),
+            false,
+        )
         .await?;
     let googlebooks_key: String = param_store
-        .parameter_from_env("ZANA_GOOGLE_BOOKS_KEY", "/zana/google-books-key", true)
+        .parameter_from_env(
+            "ZANA_GOOGLE_BOOKS_KEY",
+            &format!("/zana/{}/google-books-key", &zana_env),
+            true,
+        )
         .await?;
     let openlibrary_url: String = param_store
-        .parameter_from_env("ZANA_OPENLIBRARY_URL", "/zana/openlibrary-url", false)
+        .parameter_from_env(
+            "ZANA_OPENLIBRARY_URL",
+            &format!("/zana/{}/openlibrary-url", &zana_env),
+            false,
+        )
         .await?;
 
     let googlebooks_client = match googlebooks::Client::new(&googlebooks_key, &googlebooks_url) {
@@ -55,6 +67,13 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     };
 
     let client = Client::new(googlebooks_client, openlibrary_client);
+    tracing::info!(
+        "sending request to fetch book data for {:?} (isbn: {}, author: {}, title: {})",
+        &request_type,
+        &isbn,
+        &author,
+        &title,
+    );
 
     let book = client
         .fetch_book(&request_type, &isbn, &title, &author)
@@ -62,7 +81,14 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     match book {
         Ok(book) => success_response(&book),
         Err(err) => {
-            tracing::error!("could not fetch book for {:?}, {:?}", &request_type, err);
+            tracing::error!(
+                "could not fetch book for {:?} (isbn: {}, author: {}, title: {}), {:?}",
+                &request_type,
+                err,
+                &isbn,
+                &author,
+                &title,
+            );
             failure_response(err)
         }
     }

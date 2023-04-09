@@ -4,7 +4,7 @@ use httpmock::prelude::*;
 use httpmock::Mock;
 use zana::{Book, BookClient, ClientError, Rating};
 
-use crate::util::get_sample;
+use crate::util::{get_json_value, get_sample};
 use zana::openlibrary::Client;
 
 const ISBN_PATH: &str = "/isbn";
@@ -85,13 +85,19 @@ async fn fetch_book_by_isbn() {
 }
 
 #[tokio::test]
-async fn fetch_book_by_isbn_with_description_as_string() {
+async fn handle_response_with_description_as_string() {
     let isbn = "9780316387316";
+
+    let mut json_value = get_json_value("openlibrary_works.json");
+    json_value
+        .pointer_mut("/description")
+        .map(|v| *v = "Logen Ninefingers, infamous barbarian, has finally run out of luck.".into());
+    let response = json_value.to_string();
 
     let book = assert_successful_fetch(
         &isbn,
         &get_sample("openlibrary_isbn.json"),
-        &get_sample("openlibrary_works_string_description.json"),
+        &response,
         &get_sample("openlibrary_ratings.json"),
     )
     .await;
@@ -99,13 +105,20 @@ async fn fetch_book_by_isbn_with_description_as_string() {
 }
 
 #[tokio::test]
-async fn fetch_book_by_isbn_with_no_description() {
+async fn handle_response_with_no_description() {
     let isbn = "9780316387316";
+
+    let mut json_value = get_json_value("openlibrary_works.json");
+    json_value
+        .pointer_mut("/description")
+        .expect("description not part of the sample")
+        .take();
+    let response = json_value.to_string();
 
     let book = assert_successful_fetch(
         &isbn,
         &get_sample("openlibrary_isbn.json"),
-        &get_sample("openlibrary_works_no_description.json"),
+        &response,
         &get_sample("openlibrary_ratings.json"),
     )
     .await;
@@ -115,19 +128,51 @@ async fn fetch_book_by_isbn_with_no_description() {
 }
 
 #[tokio::test]
-async fn fetch_book_by_isbn_with_no_ratings() {
+async fn handle_response_with_no_ratings() {
     let isbn = "9780316387316";
+
+    let mut json_value = get_json_value("openlibrary_ratings.json");
+    json_value
+        .pointer_mut("/summary/average")
+        .expect("average not part of the sample")
+        .take();
+    json_value
+        .pointer_mut("/summary/count")
+        .expect("count not part of the sample")
+        .take();
+    let response = json_value.to_string();
 
     let book = assert_successful_fetch(
         &isbn,
         &get_sample("openlibrary_isbn.json"),
         &get_sample("openlibrary_works.json"),
-        &get_sample("openlibrary_no_ratings.json"),
+        &response,
     )
     .await;
     let mut expected_book = create_default_expected_book();
     expected_book.rating = None;
     assert_eq!(expected_book, book);
+}
+
+#[tokio::test]
+async fn handle_response_with_no_number_of_pages() {
+    let isbn = "9780316387316";
+
+    let mut json_value = get_json_value("openlibrary_isbn.json");
+    json_value
+        .pointer_mut("/number_of_pages")
+        .expect("number_of_pages not part of the sample")
+        .take();
+    let response = json_value.to_string();
+
+    let book = assert_successful_fetch(
+        &isbn,
+        &response,
+        &get_sample("openlibrary_works.json"),
+        &get_sample("openlibrary_ratings.json"),
+    )
+    .await;
+    assert_eq!(0, book.page_count);
 }
 
 #[tokio::test]
@@ -151,12 +196,19 @@ async fn no_book_returned_on_404_from_isbn_call() {
 async fn no_book_returned_when_works_key_missing() {
     let isbn = "9780316387316";
 
+    let mut json_value = get_json_value("openlibrary_isbn.json");
+    json_value
+        .pointer_mut("/works/0")
+        .expect("works key not part of the sample")
+        .take();
+    let response = json_value.to_string();
+
     let server = MockServer::start();
     let isbn_mock = create_mock(
         &server,
         &format!("{}/{}.json", ISBN_PATH, isbn),
         200,
-        &get_sample("openlibrary_isbn_no_works_key.json"),
+        &response,
     );
 
     let client = create_client(&server);
