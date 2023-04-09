@@ -16,6 +16,9 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
         # Setup Rust, Cargo Lambda, Zig, NodeJS and AWS CDK
       - uses: actions/checkout@v3
@@ -43,17 +46,11 @@ jobs:
         run: cargo lambda build --release --output-format zip --verbose
         # Deploy to AWS
       - name: Configure aws credentials
-        permissions:
-          id-token: write
-          contents: read
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-session-name: ${{ secrets.AWS_ROLE_SESSION_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Deploy to AWS
-        permissions:
-          id-token: write
-          contents: read
         working-directory: deployment/zana_aws
         run: cdk deploy --require-approval never
