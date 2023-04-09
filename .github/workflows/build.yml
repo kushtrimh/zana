@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Setup Rust and run tests in zana and zana_lambda services
+        # Setup Rust and run tests in zana and zana_lambda services
       - uses: actions/checkout@v3
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -42,7 +42,7 @@ jobs:
       - name: Run tests in zana_lambda service
         working-directory: services/zana_lambda
         run: cargo test --verbose
-      # Setup Java and run tests in zana_aws service
+        # Setup Java and run tests in zana_aws service
       - name: Install Node.js toolchain
         uses: actions/setup-node@v3
         with:
