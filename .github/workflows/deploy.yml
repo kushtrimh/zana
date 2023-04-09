@@ -8,8 +8,8 @@ on:
       - completed
 
 env:
-  CDK_DEFAULT_REGION: {{ secrets.AWS_REGION }}
-  CDK_DEFAULT_ACCOUNT: {{ secrets.AWS_ACCOUNT_ID }}
+  CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
   ZANA_ENV: prod
 
 jobs:
