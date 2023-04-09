@@ -84,10 +84,10 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
             tracing::error!(
                 "could not fetch book for {:?} (isbn: {}, author: {}, title: {}), {:?}",
                 &request_type,
-                err,
                 &isbn,
                 &author,
                 &title,
+                err,
             );
             failure_response(err)
         }
