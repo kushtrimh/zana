@@ -22,7 +22,7 @@ const RATINGS_PATH: &str = "/ratings";
 
 #[derive(Deserialize, Debug)]
 struct BookResponse {
-    number_of_pages: u32,
+    number_of_pages: Option<u32>,
     works: Vec<WorkIdentifier>,
 }
 
@@ -56,7 +56,7 @@ struct RatingResponse {
 #[derive(Deserialize, Debug)]
 struct RatingSummary {
     average: Option<f32>,
-    count: u32,
+    count: Option<u32>,
 }
 
 /// Client used to retrieve data from OpenLibrary API.
@@ -90,9 +90,19 @@ impl Client {
             },
             None => "",
         };
-        let mut book = Book::new(book_response.number_of_pages, description);
-        if let Some(average_rating) = rating_response.summary.average {
-            book.rating = Some(Rating::new(average_rating, rating_response.summary.count));
+        let mut book = Book::new(book_response.number_of_pages.unwrap_or(0), description);
+
+        let average_rating = rating_response.summary.average.unwrap_or(0_f32);
+        let ratings_count = rating_response.summary.count.unwrap_or(0);
+        if average_rating != 0_f32 && ratings_count != 0 {
+            book.rating = Some(Rating::new(average_rating, ratings_count));
+        } else {
+            log::debug!(
+                "ratings not added for book with work key {}, average_rating {}, ratings_count {}",
+                &book_response.works[0].key,
+                average_rating,
+                ratings_count
+            )
         }
         book
     }

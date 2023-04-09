@@ -3,7 +3,7 @@ mod util;
 use httpmock::prelude::*;
 use httpmock::Mock;
 
-use crate::util::get_sample;
+use crate::util::{get_sample, set_property_to_null};
 use zana::googlebooks::Client;
 use zana::{Book, BookClient, ClientError};
 
@@ -21,6 +21,20 @@ fn assert_book_equality(book: Book) {
     assert_eq!(book.description, "The first novel in the First Law Trilogy",);
     assert_eq!(3.5, rating.average_rating);
     assert_eq!(107, rating.ratings_count);
+}
+
+async fn assert_response(
+    isbn: &str,
+    status_code: u16,
+    response: &str,
+) -> Result<Book, ClientError> {
+    let server = MockServer::start();
+    let m = create_mock(&server, &format!("isbn:{}", isbn), status_code, &response);
+
+    let client = create_client(&server);
+    let book = client.book_by_isbn(isbn).await;
+    m.assert();
+    book
 }
 
 fn create_mock<'a>(
@@ -47,21 +61,9 @@ fn create_mock<'a>(
 async fn fetch_book_by_isbn() {
     let isbn = "9780316387316";
 
-    let server = MockServer::start();
-    let m = create_mock(
-        &server,
-        &format!("isbn:{}", isbn),
-        200,
-        &get_sample("googlebooks_volume.json"),
-    );
-
-    let client = create_client(&server);
-    let book = client
-        .book_by_isbn(isbn)
+    let book = assert_response(isbn, 200, &get_sample("googlebooks_volume.json"))
         .await
         .expect("could not get book by isbn");
-
-    m.assert();
     assert_book_equality(book);
 }
 
@@ -92,14 +94,7 @@ async fn fetch_book_by_name_and_author() {
 async fn handle_empty_book_response() {
     let isbn = "9780316387316";
 
-    let server = MockServer::start();
-    let m = create_mock(&server, &format!("isbn:{}", isbn), 200, "{}");
-
-    let client = create_client(&server);
-    let book = client.book_by_isbn(isbn).await;
-
-    m.assert();
-
+    let book = assert_response(isbn, 200, "{}").await;
     let _returned_error = book
         .err()
         .expect("error not returned when expected for missing book");
@@ -111,19 +106,67 @@ async fn return_rate_limit_error() {
     let isbn = "9780316387316";
 
     for status_code in [429, 403] {
-        let server = MockServer::start();
-        let m = create_mock(&server, &format!("isbn:{}", isbn), status_code, "");
-
-        let client = create_client(&server);
-        let book = client.book_by_isbn(isbn).await;
-
-        m.assert();
+        let book = assert_response(isbn, status_code, "").await;
         let _returned_error = book.err().expect(&format!(
             "error not returned when expected for status {}",
             status_code
         ));
         assert!(matches!(ClientError::RateLimitExceeded, _returned_error));
     }
+}
+
+#[tokio::test]
+async fn handle_response_with_null_average_rating() {
+    let isbn = "9780316387316";
+    let json_value = set_property_to_null(
+        "googlebooks_volume.json",
+        "/items/0/volumeInfo/averageRating",
+    );
+    let response = json_value.to_string();
+    let book = assert_response(isbn, 200, &response)
+        .await
+        .expect("could not get book by isbn");
+    assert!(book.rating.is_none());
+}
+
+#[tokio::test]
+async fn handle_response_with_null_ratings_count() {
+    let isbn = "9780316387316";
+    let json_value = set_property_to_null(
+        "googlebooks_volume.json",
+        "/items/0/volumeInfo/ratingsCount",
+    );
+    let response = json_value.to_string();
+    let book = assert_response(isbn, 200, &response)
+        .await
+        .expect("could not get book by isbn");
+    assert!(book.rating.is_none());
+}
+
+#[tokio::test]
+async fn handle_response_with_null_description() {
+    let isbn = "9780316387316";
+    let json_value =
+        set_property_to_null("googlebooks_volume.json", "/items/0/volumeInfo/description");
+    let response = json_value.to_string();
+    let book = assert_response(isbn, 200, &response)
+        .await
+        .expect("could not get book by isbn");
+
+    assert!(book.description.is_empty());
+}
+
+#[tokio::test]
+async fn handle_response_with_null_page_count() {
+    let isbn = "9780316387316";
+    let json_value =
+        set_property_to_null("googlebooks_volume.json", "/items/0/volumeInfo/pageCount");
+    let response = json_value.to_string();
+    let book = assert_response(isbn, 200, &response)
+        .await
+        .expect("could not get book by isbn");
+
+    assert_eq!(0, book.page_count);
 }
 
 #[tokio::test]

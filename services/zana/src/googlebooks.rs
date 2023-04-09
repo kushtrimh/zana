@@ -20,6 +20,7 @@ struct Volume {
 
 #[derive(Deserialize, Debug)]
 struct VolumeItem {
+    id: String,
     #[serde(rename(deserialize = "volumeInfo"))]
     info: VolumeInfo,
 }
@@ -30,13 +31,13 @@ struct VolumeInfo {
     _title: String,
     #[serde(rename(deserialize = "authors"))]
     _authors: Vec<String>,
-    description: String,
+    description: Option<String>,
     #[serde(rename(deserialize = "pageCount"))]
-    page_count: u32,
+    page_count: Option<u32>,
     #[serde(rename(deserialize = "averageRating"))]
-    average_rating: f32,
+    average_rating: Option<f32>,
     #[serde(rename(deserialize = "ratingsCount"))]
-    ratings_count: u32,
+    ratings_count: Option<u32>,
 }
 
 /// Client used to retrieve data from Google Books API.
@@ -66,12 +67,24 @@ impl Client {
         let volume_item = &items[0];
         let volume_info = &volume_item.info;
 
-        let rating = Rating::new(volume_info.average_rating, volume_info.ratings_count);
-        Ok(Book::new_with_rating(
-            volume_info.page_count,
-            &volume_info.description,
-            rating,
-        ))
+        let average_rating = volume_info.average_rating.unwrap_or(0_f32);
+        let ratings_count = volume_info.ratings_count.unwrap_or(0);
+
+        let description = volume_info.description.as_deref().unwrap_or("");
+        let page_count = volume_info.page_count.unwrap_or(0);
+
+        if average_rating == 0_f32 || ratings_count == 0 {
+            log::debug!(
+                "ratings not added for book with volume id {}, average_rating {}, ratings_count {}",
+                &volume_item.id,
+                average_rating,
+                ratings_count
+            );
+            Ok(Book::new(page_count, &description))
+        } else {
+            let rating = Rating::new(average_rating, ratings_count);
+            Ok(Book::new_with_rating(page_count, &description, rating))
+        }
     }
 
     async fn fetch_book(&self, query: &str) -> Result<Book, ClientError> {

@@ -108,6 +108,10 @@ pub enum ClientError {
 ///
 /// Data retrieve by clients, in some cases by multiple API calls, will be aggregated
 /// and returned as this type.
+/// [page_count](struct@Book.page_count) is returned as 0 if its not provided
+/// by the third-party service.
+/// [description](struct@Book.description) will be returned as an empty string if its not
+/// provided by the third-party service.
 /// [rating](struct@Book.rating) is optional, since in some cases books either may not have
 /// rating data available yet, or clients in the future may not provide ratings at all.
 #[derive(Debug, PartialEq)]
@@ -151,7 +155,8 @@ impl Rating {
     /// Returns a new rating.
     ///
     /// Meant only to be created for ratings that are valid and exist.
-    /// In this case a rating that is '_valid_' is one that does not have a `ratings_count` of 0.
+    /// In this case a rating that is '_valid_' is one that is `null` or does not
+    /// have a `ratings_count` *or* `average_rating` of 0 when retrieved from the provider.
     pub fn new(average_rating: f32, ratings_count: u32) -> Self {
         Self {
             average_rating,
