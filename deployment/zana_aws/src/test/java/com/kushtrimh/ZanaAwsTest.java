@@ -1,5 +1,6 @@
 package com.kushtrimh;
 
+import com.kushtrimh.utils.MutableMapFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awscdk.App;
@@ -270,6 +271,24 @@ public class ZanaAwsTest {
     }
 
     @Test
+    public void cloudFrontDistribution_ResponsePolicyHeadersIsConfiguredProperly() {
+        var corsConfigCapture = new Capture();
+        var baseProps = getCloudFrontDistributionResponsePolicyBaseProps();
+        var corsConfig = ((Map<String, Map<String, Object>>) baseProps.get("ResponseHeadersPolicyConfig")).get("CorsConfig");
+        corsConfig.put("AccessControlAllowOrigins", Map.of(
+                        "Items", List.of(
+                                Map.of("Ref", corsConfigCapture))
+                )
+        );
+        template.hasResourceProperties("AWS::CloudFront::ResponseHeadersPolicy", baseProps);
+
+        var corsConfigParameterId = corsConfigCapture.asString();
+        var corsConfigParameter = template.findParameters(corsConfigParameterId);
+
+        assertEquals("/zana/test/cors-allow-origins", corsConfigParameter.get(corsConfigParameterId).get("Default"));
+    }
+
+    @Test
     public void cloudFrontDistribution_DistributionIsConfiguredProperly() {
         var aliasCapture = new Capture();
         var certificateCapture = new Capture();
@@ -278,6 +297,10 @@ public class ZanaAwsTest {
                 "Properties", Match.objectLike(getCloudFrontDistributionCachePolicyBaseProps())));
         var cachePolicyId = cachePolicy.keySet().iterator().next();
 
+        var responseHeadersPolicy = template.findResources("AWS::CloudFront::ResponseHeadersPolicy", Map.of(
+                "Properties", Match.objectLike(getCloudFrontDistributionResponsePolicyBaseProps())));
+        var responseHeadersPolicyId = responseHeadersPolicy.keySet().iterator().next();
+
         template.hasResourceProperties("AWS::CloudFront::Distribution", Map.of(
                         "DistributionConfig", Map.of(
                                 "Aliases", List.of(Map.of("Ref", aliasCapture)),
@@ -285,6 +308,8 @@ public class ZanaAwsTest {
                                         "CachePolicyId", Map.of(
                                                 "Ref", cachePolicyId),
                                         "Compress", true,
+                                        "ResponseHeadersPolicyId", Map.of(
+                                                "Ref", responseHeadersPolicyId),
                                         "TargetOriginId", Match.anyValue(),
                                         "ViewerProtocolPolicy", "allow-all"),
                                 "Enabled", true,
@@ -378,7 +403,8 @@ public class ZanaAwsTest {
                                 "RUST_BACKTRACE", "1",
                                 "ZANA_ENV", ENV)),
                 "Handler", "main",
-                "Runtime", "provided.al2");
+                "Runtime", "provided.al2",
+                "Timeout", 30);
     }
 
     private Map<String, Object> getZanaLambdaAliasBaseProps() {
@@ -450,6 +476,20 @@ public class ZanaAwsTest {
                                         "HeaderBehavior", "none"),
                                 "QueryStringsConfig", Map.of(
                                         "QueryStringBehavior", "all"))));
+    }
+
+    private Map<String, Object> getCloudFrontDistributionResponsePolicyBaseProps() {
+        return MutableMapFactory.of(
+                "ResponseHeadersPolicyConfig", MutableMapFactory.of(
+                        "CorsConfig", MutableMapFactory.of(
+                                "AccessControlAllowCredentials", false,
+                                "AccessControlAllowMethods", MutableMapFactory.of(
+                                        "Items", List.of("GET")
+                                ),
+                                "OriginOverride", true
+                        )
+                )
+        );
     }
 
     private Map<String, Object> merge(Map<String, Object> props1, Map<String, Object> props2) {
