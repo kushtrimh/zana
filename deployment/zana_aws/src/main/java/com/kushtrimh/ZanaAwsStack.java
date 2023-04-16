@@ -19,6 +19,8 @@ import software.amazon.awscdk.services.cloudfront.BehaviorOptions;
 import software.amazon.awscdk.services.cloudfront.CachePolicy;
 import software.amazon.awscdk.services.cloudfront.CacheQueryStringBehavior;
 import software.amazon.awscdk.services.cloudfront.Distribution;
+import software.amazon.awscdk.services.cloudfront.ResponseHeadersCorsBehavior;
+import software.amazon.awscdk.services.cloudfront.ResponseHeadersPolicy;
 import software.amazon.awscdk.services.cloudfront.origins.HttpOrigin;
 import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.ManagedPolicy;
@@ -42,6 +44,7 @@ import software.amazon.awscdk.services.route53.targets.CloudFrontTarget;
 import software.amazon.awscdk.services.ssm.StringParameter;
 import software.constructs.Construct;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -57,9 +60,15 @@ public class ZanaAwsStack extends Stack {
     public ZanaAwsStack(final Construct scope, final String id, final StackProps props, final String zanaEnv) {
         super(scope, id, props);
 
+        // Cors configuration
+        var corsAllowedOrigins = Arrays.stream(StringParameter.valueForStringParameter(this,
+                                String.format("/zana/%s/cors-allow-origins", zanaEnv))
+                        .split(","))
+                .toList();
+
         var booksDataLambda = createZanaBooksDataLambda(zanaEnv);
-        var restApi = createZanaRestApi(zanaEnv, booksDataLambda);
-        var distribution = createCloudFrontDistribution(zanaEnv, restApi);
+        var restApi = createZanaRestApi(zanaEnv, booksDataLambda, corsAllowedOrigins);
+        var distribution = createCloudFrontDistribution(zanaEnv, restApi, corsAllowedOrigins);
 
         // Hosted zone configuration
         var hostedZoneId = StringParameter.valueForStringParameter(this,
@@ -80,7 +89,7 @@ public class ZanaAwsStack extends Stack {
                 .build();
     }
 
-    private Distribution createCloudFrontDistribution(String zanaEnv, RestApi restApi) {
+    private Distribution createCloudFrontDistribution(String zanaEnv, RestApi restApi, List<String> corsAllowedOrigins) {
         var certificateArn = StringParameter.valueForStringParameter(this,
                 String.format("/zana/%s/certificate-arn", zanaEnv));
         var apiDomain = StringParameter.valueForStringParameter(this, String.format("/zana/%s/api-host", zanaEnv));
@@ -96,6 +105,15 @@ public class ZanaAwsStack extends Stack {
                                 .maxTtl(Duration.hours(12))
                                 .enableAcceptEncodingGzip(true)
                                 .queryStringBehavior(CacheQueryStringBehavior.all())
+                                .build())
+                        .responseHeadersPolicy(ResponseHeadersPolicy.Builder.create(this, "zana-distribution-response-header-policy")
+                                .corsBehavior(ResponseHeadersCorsBehavior.builder()
+                                        .accessControlAllowHeaders(Cors.DEFAULT_HEADERS)
+                                        .accessControlAllowMethods(List.of("GET"))
+                                        .accessControlAllowOrigins(corsAllowedOrigins)
+                                        .accessControlAllowCredentials(false)
+                                        .originOverride(true)
+                                        .build())
                                 .build())
                         .origin(HttpOrigin.Builder.create(apiDomainName).originPath("/prod").build())
                         .build())
@@ -146,6 +164,7 @@ public class ZanaAwsStack extends Stack {
                         "ZANA_ENV", zanaEnv,
                         "PARAMETERS_SECRETS_EXTENSION_HTTP_PORT", "2773"))
                 .role(lambdaRole)
+                .timeout(Duration.seconds(30))
                 .insightsVersion(LambdaInsightsVersion.fromInsightVersionArn(lambdaInsightsExtensionArn))
                 .logRetention(RetentionDays.TWO_YEARS)
                 .layers(List.of(
@@ -168,11 +187,7 @@ public class ZanaAwsStack extends Stack {
         return booksDataLambda;
     }
 
-    private RestApi createZanaRestApi(String zanaEnv, Function booksDataLambda) {
-        var corsAllowOrigins = StringParameter.valueForStringParameter(this,
-                String.format("/zana/%s/cors-allow-origins", zanaEnv))
-                .split(",");
-
+    private RestApi createZanaRestApi(String zanaEnv, Function booksDataLambda, List<String> corsAllowedOrigins) {
         var restApiLogGroup = new LogGroup(this, "zana-books-api-log-group");
 
         var restApi = RestApi.Builder.create(this, "zana-books-api")
@@ -190,7 +205,7 @@ public class ZanaAwsStack extends Stack {
                 .defaultCorsPreflightOptions(CorsOptions.builder()
                         .allowHeaders(Cors.DEFAULT_HEADERS)
                         .allowMethods(List.of("GET"))
-                        .allowOrigins(List.of(corsAllowOrigins))
+                        .allowOrigins(corsAllowedOrigins)
                         .build())
                 .endpointConfiguration(EndpointConfiguration.builder()
                         .types(List.of(EndpointType.REGIONAL))
