@@ -7,12 +7,14 @@
     "64": "icons/icon.png"
   },
   "permissions": [
-      "tabs",
-      "https://api.zanareads.com/*"
+    "webRequest",
+    "https://dukagjinibooks.com/api/products/*",
+    "https://www.dukagjinibooks.com/api/products/*",
+    "https://api.zanareads.com/*"
   ],
   "background": {
     "scripts": [
-      "background_script.js"
+      "background.js"
     ]
   },
   "content_scripts": [
@@ -24,6 +26,9 @@
       "js": [
         "modules/dukagjinibooks.js",
         "content_script.js"
+      ],
+      "css": [
+        "css/dukagjinibooks.css"
       ]
     }
   ]
