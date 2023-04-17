@@ -8,7 +8,7 @@ const hostsConfig = {
 const hostConfig = hostsConfig[host];
 hostConfig.init();
 
-browser.runtime.onMessage.addListener((message) => {
+browser.runtime.onMessage.addListener(() => {
     const isbn = hostConfig.retrieveIsbn();
     if (hostConfig) {
         if (hostConfig.queryBookData) {
@@ -18,6 +18,11 @@ browser.runtime.onMessage.addListener((message) => {
         }
     }
 });
+
+const isbn = hostConfig.retrieveIsbn();
+if (isbn) {
+    update(isbn);
+}
 
 function update(isbn) {
     const responsePromises = retrieveBookData(isbn);
