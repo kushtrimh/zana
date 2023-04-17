@@ -24,6 +24,7 @@
         "*://*.dukagjinibooks.com/*"
       ],
       "js": [
+        "lib/browser-polyfill.min.js",
         "modules/dukagjinibooks.js",
         "content_script.js"
       ],
