@@ -1,3 +1,7 @@
+if (typeof browser === 'undefined') {
+    browser = chrome;
+}
+
 const apiUrl = 'https://api.zanareads.com/books';
 
 const host = window.location.host;

@@ -24,6 +24,8 @@ dukagjini.init = function() {
 function handle(event) {
     let responses = event.detail.responses;
 
+    // TODO: Check if response if valid
+
     let bookDetailsNode = document.querySelector('#book-details .container');
 
     let existingContainer = document.querySelector('.dukagjinibooks-container');
@@ -89,6 +91,7 @@ function createBookMetadata(numberOfPages) {
 function createDescription(description) {
     if (description) {
         let descriptionElement = document.createElement('div');
+        descriptionElement.className = 'dukagjinibooks-description';
         descriptionElement.textContent = description;
         return descriptionElement;
     }

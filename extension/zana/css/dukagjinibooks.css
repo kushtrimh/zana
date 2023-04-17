@@ -51,3 +51,8 @@
 
 .dukagjinibooks-rating-type-image {
 }
+
+.dukagjinibooks-description {
+    display: block;
+    width: 100%;
+}

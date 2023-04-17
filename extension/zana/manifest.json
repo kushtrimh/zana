@@ -32,5 +32,10 @@
         "css/dukagjinibooks.css"
       ]
     }
+  ],
+  "web_accessible_resources": [
+    "images/googlebooks.svg",
+    "images/openlibrary.svg",
+    "css/dukagjinibooks.css"
   ]
 }

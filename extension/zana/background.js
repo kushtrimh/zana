@@ -1,3 +1,7 @@
+if (typeof browser === 'undefined') {
+    browser = chrome;
+}
+
 let targets = [
     "https://dukagjinibooks.com/api/products/*"
 ];
