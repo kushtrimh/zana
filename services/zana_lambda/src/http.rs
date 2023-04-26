@@ -155,18 +155,20 @@ impl SuccessResponse {
     }
 }
 
-/// Represents a book and some of it's data.
+/// Represents a book and some of its data.
 #[derive(Serialize, Debug)]
 pub struct BookData {
     pub page_count: u32,
     pub description: String,
+    pub provider_link: String,
 }
 
 impl BookData {
-    pub fn new(page_count: u32, description: &str) -> Self {
+    pub fn new(page_count: u32, description: &str, provider_link: &str) -> Self {
         Self {
             page_count,
             description: String::from(description),
+            provider_link: String::from(provider_link),
         }
     }
 }
@@ -206,7 +208,11 @@ pub fn failure_response(error: ResponseError) -> Result<Response<Body>, Error> {
 ///
 /// Response is returned as JSON and content type is set to `application/json` by default.
 pub fn success_response(book: &Book) -> Result<Response<Body>, Error> {
-    let mut response = SuccessResponse::new(BookData::new(book.page_count, &book.description));
+    let mut response = SuccessResponse::new(BookData::new(
+        book.page_count,
+        &book.description,
+        &book.provider_link,
+    ));
 
     if let Some(rating) = &book.rating {
         response.rating = Some(RatingData::new(rating.average_rating, rating.ratings_count));
@@ -420,8 +426,13 @@ mod tests {
     #[test]
     fn response_from_book() {
         let rating = Rating::new(4.5, 123);
-        let book = Book::new_with_rating(531, "Book description here", rating);
-        let expected_body = "{\"data\":{\"page_count\":531,\"description\":\"Book description here\"},\"rating\":{\"average_rating\":4.5,\"ratings_count\":123}}";
+        let book = Book::new_with_rating(
+            531,
+            "Book description here",
+            "http://localhost/link/to/book",
+            rating,
+        );
+        let expected_body = "{\"data\":{\"page_count\":531,\"description\":\"Book description here\",\"provider_link\":\"http://localhost/link/to/book\"},\"rating\":{\"average_rating\":4.5,\"ratings_count\":123}}";
 
         let response = success_response(&book).expect("response expected to be present");
         let body = String::from_utf8(response.body().to_vec()).expect("utf8 string expected");
@@ -432,8 +443,12 @@ mod tests {
 
     #[test]
     fn response_from_book_without_ratings() {
-        let book = Book::new(531, "Book description here");
-        let expected_body = "{\"data\":{\"page_count\":531,\"description\":\"Book description here\"},\"rating\":null}";
+        let book = Book::new(
+            531,
+            "Book description here",
+            "http://localhost/link/to/book",
+        );
+        let expected_body = "{\"data\":{\"page_count\":531,\"description\":\"Book description here\",\"provider_link\":\"http://localhost/link/to/book\"},\"rating\":null}";
 
         let response = success_response(&book).expect("response expected to be present");
         let body = String::from_utf8(response.body().to_vec()).expect("utf8 string expected");

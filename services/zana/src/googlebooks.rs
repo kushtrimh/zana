@@ -38,6 +38,8 @@ struct VolumeInfo {
     average_rating: Option<f32>,
     #[serde(rename(deserialize = "ratingsCount"))]
     ratings_count: Option<u32>,
+    #[serde(rename(deserialize = "infoLink"))]
+    info_link: String,
 }
 
 /// Client used to retrieve data from Google Books API.
@@ -80,10 +82,15 @@ impl Client {
                 average_rating,
                 ratings_count
             );
-            Ok(Book::new(page_count, &description))
+            Ok(Book::new(page_count, &description, &volume_info.info_link))
         } else {
             let rating = Rating::new(average_rating, ratings_count);
-            Ok(Book::new_with_rating(page_count, &description, rating))
+            Ok(Book::new_with_rating(
+                page_count,
+                &description,
+                &volume_info.info_link,
+                rating,
+            ))
         }
     }
 

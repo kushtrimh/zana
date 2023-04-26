@@ -122,25 +122,34 @@ mod tests {
         author: String,
         pages: u32,
         description: String,
+        provider_link: String,
     }
 
     impl TestBookClient {
         fn default() -> Self {
-            Self::new("", "", "", 0, "")
+            Self::new("", "", "", 0, "", "")
         }
 
-        fn new(isbn: &str, title: &str, author: &str, pages: u32, description: &str) -> Self {
+        fn new(
+            isbn: &str,
+            title: &str,
+            author: &str,
+            pages: u32,
+            description: &str,
+            provider_link: &str,
+        ) -> Self {
             Self {
                 isbn: String::from(isbn),
                 pages,
                 title: String::from(title),
                 author: String::from(author),
                 description: String::from(description),
+                provider_link: String::from(provider_link),
             }
         }
 
-        fn new_with_isbn(isbn: &str, pages: u32, description: &str) -> Self {
-            Self::new(isbn, "", "", pages, description)
+        fn new_with_isbn(isbn: &str, pages: u32, description: &str, provider_link: &str) -> Self {
+            Self::new(isbn, "", "", pages, description, provider_link)
         }
 
         fn new_with_title_and_author(
@@ -148,8 +157,9 @@ mod tests {
             author: &str,
             pages: u32,
             description: &str,
+            provider_link: &str,
         ) -> Self {
-            Self::new("", title, author, pages, description)
+            Self::new("", title, author, pages, description, provider_link)
         }
     }
 
@@ -157,7 +167,11 @@ mod tests {
     impl BookClient for TestBookClient {
         async fn book_by_isbn(&self, isbn: &str) -> Result<Book, ClientError> {
             if self.isbn == isbn {
-                Ok(Book::new(self.pages, &self.description))
+                Ok(Book::new(
+                    self.pages,
+                    &self.description,
+                    &self.provider_link,
+                ))
             } else {
                 Err(ClientError::NotFound)
             }
@@ -165,7 +179,11 @@ mod tests {
 
         async fn book(&self, author: &str, title: &str) -> Result<Book, ClientError> {
             if self.title == title && self.author == author {
-                Ok(Book::new(self.pages, &self.description))
+                Ok(Book::new(
+                    self.pages,
+                    &self.description,
+                    &self.provider_link,
+                ))
             } else {
                 Err(ClientError::NotFound)
             }
@@ -196,16 +214,17 @@ mod tests {
         let isbn = "9781591026419";
         let pages = 100;
         let description = "Book description";
+        let provider_link = "http://localhost/link/to/book";
 
         let gb_client = TestBookClient::default();
-        let op_client = TestBookClient::new_with_isbn(isbn, pages, description);
+        let op_client = TestBookClient::new_with_isbn(isbn, pages, description, provider_link);
         let client = Client::new(Box::new(gb_client), Box::new(op_client));
         let returned_book = client
             .fetch_book(&RequestType::OpenLibrary, isbn, "", "")
             .await
             .expect("could not retrieve book");
 
-        assert_eq!(Book::new(pages, description), returned_book);
+        assert_eq!(Book::new(pages, description, provider_link), returned_book);
     }
 
     #[tokio::test]
@@ -214,16 +233,22 @@ mod tests {
         let author = "Author Rothua";
         let pages = 100;
         let description = "Book description";
+        let provider_link = "http://localhost/link/to/book";
 
         let gb_client = TestBookClient::default();
-        let op_client =
-            TestBookClient::new_with_title_and_author(title, author, pages, description);
+        let op_client = TestBookClient::new_with_title_and_author(
+            title,
+            author,
+            pages,
+            description,
+            provider_link,
+        );
         let client = Client::new(Box::new(gb_client), Box::new(op_client));
         let returned_book = client
             .fetch_book(&RequestType::OpenLibrary, "", title, author)
             .await
             .expect("could not retrieve book");
 
-        assert_eq!(Book::new(pages, description), returned_book);
+        assert_eq!(Book::new(pages, description, provider_link), returned_book);
     }
 }
