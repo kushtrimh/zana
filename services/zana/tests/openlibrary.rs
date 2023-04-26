@@ -29,10 +29,13 @@ fn create_mock<'a>(
     })
 }
 
-fn create_default_expected_book() -> Book {
+fn create_default_expected_book(port: u16) -> Book {
+    let works_id = "OL8400950W";
     let ratings = Rating::new(4.5, 23);
     let description = "Logen Ninefingers, infamous barbarian, has finally run out of luck.";
-    Book::new_with_rating(542, description, ratings)
+
+    let provider_link = format!("http://127.0.0.1:{}/works/{}", port, works_id);
+    Book::new_with_rating(542, description, &provider_link, ratings)
 }
 
 async fn assert_successful_fetch(
@@ -40,7 +43,7 @@ async fn assert_successful_fetch(
     isbn_sample: &str,
     works_sample: &str,
     ratings_sample: &str,
-) -> Book {
+) -> (MockServer, Book) {
     let server = MockServer::start();
     let isbn_mock = create_mock(
         &server,
@@ -67,21 +70,21 @@ async fn assert_successful_fetch(
     isbn_mock.assert();
     works_mock.assert();
     ratings_mock.assert();
-    book
+    (server, book)
 }
 
 #[tokio::test]
 async fn fetch_book_by_isbn() {
     let isbn = "9780316387316";
 
-    let book = assert_successful_fetch(
+    let (server, book) = assert_successful_fetch(
         &isbn,
         &get_sample("openlibrary_isbn.json"),
         &get_sample("openlibrary_works.json"),
         &get_sample("openlibrary_ratings.json"),
     )
     .await;
-    assert_eq!(create_default_expected_book(), book);
+    assert_eq!(create_default_expected_book(server.port()), book);
 }
 
 #[tokio::test]
@@ -94,14 +97,14 @@ async fn handle_response_with_description_as_string() {
         .map(|v| *v = "Logen Ninefingers, infamous barbarian, has finally run out of luck.".into());
     let response = json_value.to_string();
 
-    let book = assert_successful_fetch(
+    let (server, book) = assert_successful_fetch(
         &isbn,
         &get_sample("openlibrary_isbn.json"),
         &response,
         &get_sample("openlibrary_ratings.json"),
     )
     .await;
-    assert_eq!(create_default_expected_book(), book);
+    assert_eq!(create_default_expected_book(server.port()), book);
 }
 
 #[tokio::test]
@@ -115,14 +118,14 @@ async fn handle_response_with_no_description() {
         .take();
     let response = json_value.to_string();
 
-    let book = assert_successful_fetch(
+    let (server, book) = assert_successful_fetch(
         &isbn,
         &get_sample("openlibrary_isbn.json"),
         &response,
         &get_sample("openlibrary_ratings.json"),
     )
     .await;
-    let mut expected_book = create_default_expected_book();
+    let mut expected_book = create_default_expected_book(server.port());
     expected_book.description = String::new();
     assert_eq!(expected_book, book);
 }
@@ -142,14 +145,14 @@ async fn handle_response_with_no_ratings() {
         .take();
     let response = json_value.to_string();
 
-    let book = assert_successful_fetch(
+    let (server, book) = assert_successful_fetch(
         &isbn,
         &get_sample("openlibrary_isbn.json"),
         &get_sample("openlibrary_works.json"),
         &response,
     )
     .await;
-    let mut expected_book = create_default_expected_book();
+    let mut expected_book = create_default_expected_book(server.port());
     expected_book.rating = None;
     assert_eq!(expected_book, book);
 }
@@ -165,7 +168,7 @@ async fn handle_response_with_no_number_of_pages() {
         .take();
     let response = json_value.to_string();
 
-    let book = assert_successful_fetch(
+    let (_, book) = assert_successful_fetch(
         &isbn,
         &response,
         &get_sample("openlibrary_works.json"),

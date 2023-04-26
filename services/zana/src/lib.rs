@@ -1,12 +1,12 @@
 /*!
 This crate provides functionality to retrieve data from the following
 book related APIs:
-- [OpenLibrary](https://openlibrary.org/)
-- [Google Books](https://developers.google.com/books)
+- Client for [OpenLibrary](https://openlibrary.org/)
+- Client for [Google Books](https://developers.google.com/books)
 
 Data is retrieved through calls being made by implementations of [`BookClient`](trait@BookClient).
 
-## Google Books API
+## Client for Google Books API
 
 When querying from Google Books API, one API calls is made to the _volumes_ endpoint,
 to retrieve data by ISBN of a book. In cases where no data is found by ISBN,
@@ -35,9 +35,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## OpenLibrary
+## Client for OpenLibrary
 
-For OpenLibrary, three separate API calls need to be made by [`Client`](struct@openlibrary::Client):
+[`Client`](struct@openlibrary::Client) for OpenLibrary makes three separate API calls:
 1. Fetch book by ISBN
 2. Fetch `work` of the book (A _work_ here being a logical collection of similar editions)
 3. Fetch ratings
@@ -112,7 +112,7 @@ pub enum ClientError {
 /// [page_count](struct@Book.page_count) is returned as 0 if its not provided
 /// by the third-party service.
 ///
-/// [description](struct@Book.description) will be returned as an empty string if its not
+/// [description](struct@Book.description) is returned as an empty string if its not
 /// provided by the third-party service.
 ///
 /// [rating](struct@Book.rating) is optional, since in some cases books either may not have
@@ -120,8 +120,12 @@ pub enum ClientError {
 /// may not provide ratings at all.
 #[derive(Debug, PartialEq)]
 pub struct Book {
+    /// Number of pages, 0 if not provided by the third-party service
     pub page_count: u32,
+    /// Book description, empty if not provided by the third-party service
     pub description: String,
+    /// Link to view the book at the third-party service
+    pub provider_link: String,
     pub rating: Option<Rating>,
 }
 
@@ -139,17 +143,23 @@ impl Book {
     /// Returns a Book with defaults for optional data.
     ///
     /// - rating is optional, and by default is [`None`](None)
-    pub fn new(page_count: u32, description: &str) -> Self {
+    pub fn new(page_count: u32, description: &str, provider_link: &str) -> Self {
         Self {
             page_count,
             description: String::from(description),
+            provider_link: String::from(provider_link),
             rating: None,
         }
     }
 
     /// Returns a Book with required data and ratings
-    pub fn new_with_rating(page_count: u32, description: &str, rating: Rating) -> Self {
-        let mut book = Book::new(page_count, description);
+    pub fn new_with_rating(
+        page_count: u32,
+        description: &str,
+        provider_link: &str,
+        rating: Rating,
+    ) -> Self {
+        let mut book = Book::new(page_count, description, provider_link);
         book.rating = Some(rating);
         book
     }
@@ -160,7 +170,7 @@ impl Rating {
     ///
     /// Meant only to be created for ratings that are valid and exist.
     /// In this case a rating that is '_valid_' is one that is `null` or does not
-    /// have a `ratings_count` *or* `average_rating` of 0 when retrieved from the provider.
+    /// have a `ratings_count` *or* `average_rating` of 0 when retrieved from the third-party service.
     pub fn new(average_rating: f32, ratings_count: u32) -> Self {
         Self {
             average_rating,

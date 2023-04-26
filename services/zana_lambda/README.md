@@ -83,12 +83,12 @@ where `.env` is the file containing the environment variables mentioned above.
 
 The lambda should start on port `9000` by default.
 
-_OpenLibrary_
+_Request for OpenLibrary_
 ```
 GET http://localhost:9000/lambda-url/zana_lambda?type=openlibrary&isbn=9781591026419
 ```
 
-_Google Books_
+_Request for Google Books_
 ```
 GET http://localhost:9000/lambda-url/zana_lambda?type=googlebooks&isbn=9781591026419
 ```
