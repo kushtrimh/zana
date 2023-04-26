@@ -14,6 +14,7 @@ hostConfig.init();
 
 browser.runtime.onMessage.addListener(() => {
     const isbn = hostConfig.retrieveIsbn();
+    // TODO: this is what needs to be exctracted
     if (hostConfig) {
         if (hostConfig.queryBookData) {
             if (isbn) {
@@ -23,6 +24,7 @@ browser.runtime.onMessage.addListener(() => {
     }
 });
 
+// TODO: extract to method
 const isbn = hostConfig.retrieveIsbn();
 if (isbn) {
     update(isbn);

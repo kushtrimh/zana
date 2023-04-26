@@ -40,7 +40,7 @@ function handle(event) {
     let ratingsContainer = document.createElement('div');
     ratingsContainer.className = 'dukagjinibooks-ratings-container';
 
-    for (response of responses) {
+    for (let response of responses) {
         let rating = response.body.rating;
         if (rating) {
             let ratingsElement = createRatings(response.type, rating);
@@ -53,7 +53,7 @@ function handle(event) {
 
     let numberOfPages;
     let description;
-    for (response of responses) {
+    for (let response of responses) {
         const data = response.body.data;
         if (data.page_count && !numberOfPages) {
             numberOfPages = data.page_count;
@@ -69,6 +69,7 @@ function handle(event) {
         dataContainer.appendChild(numberOfPagesElement);
     }
     // Description
+    // todo: check if description here, then create and add el;ement
     const descriptionElement = createDescription(description);
     if (descriptionElement) {
         dataContainer.appendChild(descriptionElement);
