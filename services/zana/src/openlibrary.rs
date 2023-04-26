@@ -79,6 +79,7 @@ impl Client {
 
     fn create_book(
         &self,
+        works_path: &str,
         book_response: &BookResponse,
         work_response: &WorkResponse,
         rating_response: &RatingResponse,
@@ -90,7 +91,12 @@ impl Client {
             },
             None => "",
         };
-        let mut book = Book::new(book_response.number_of_pages.unwrap_or(0), description);
+        let provider_link = format!("{}{}", self.api_url, works_path);
+        let mut book = Book::new(
+            book_response.number_of_pages.unwrap_or(0),
+            description,
+            &provider_link,
+        );
 
         let average_rating = rating_response.summary.average.unwrap_or(0_f32);
         let ratings_count = rating_response.summary.count.unwrap_or(0);
@@ -170,7 +176,12 @@ impl Client {
         let work_response = self.fetch_work(works_path).await?;
         let ratings_response = self.fetch_rating(works_path).await?;
 
-        Ok(self.create_book(&book_response, &work_response, &ratings_response))
+        Ok(self.create_book(
+            works_path,
+            &book_response,
+            &work_response,
+            &ratings_response,
+        ))
     }
 }
 

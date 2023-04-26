@@ -18,7 +18,8 @@ fn assert_book_equality(book: Book) {
     let rating = book.rating.expect("ratings should exist");
 
     assert_eq!(560, book.page_count);
-    assert_eq!(book.description, "The first novel in the First Law Trilogy",);
+    assert_eq!("The first novel in the First Law Trilogy", book.description);
+    assert_eq!("https://localhost/books/v1/info", book.provider_link);
     assert_eq!(3.5, rating.average_rating);
     assert_eq!(107, rating.ratings_count);
 }
