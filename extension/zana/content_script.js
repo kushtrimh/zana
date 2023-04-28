@@ -13,24 +13,23 @@ const hostConfig = hostsConfig[host];
 hostConfig.init();
 
 browser.runtime.onMessage.addListener(() => {
+    update();
+});
+
+update();
+
+function update() {
     const isbn = hostConfig.retrieveIsbn();
-    // TODO: this is what needs to be exctracted
     if (hostConfig) {
         if (hostConfig.queryBookData) {
             if (isbn) {
-                update(isbn);
+                notify(isbn);
             }
         }
     }
-});
-
-// TODO: extract to method
-const isbn = hostConfig.retrieveIsbn();
-if (isbn) {
-    update(isbn);
 }
 
-function update(isbn) {
+function notify(isbn) {
     const responsePromises = retrieveBookData(isbn);
     Promise.all(responsePromises)
         .then(responses => {

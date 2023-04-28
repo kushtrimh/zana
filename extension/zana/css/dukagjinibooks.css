@@ -8,6 +8,12 @@
     color: #7a7777;
 }
 
+@media (max-width: 1280px) {
+    .dukagjinibooks-container {
+        margin: 0 5px !important;
+    }
+}
+
 .dukagjinibooks-ratings-container {
     color: #ffcc00;
     font-size: 1.5em;
@@ -50,6 +56,14 @@
 }
 
 .dukagjinibooks-rating-type-image {
+    margin-left: 10px;
+    padding-top: 7px;
+}
+
+.dukagjinibooks-rating-external-link {
+    margin-left: 2px;
+    padding-top: 7px;
+    fill: #d8565b;
 }
 
 .dukagjinibooks-description {
