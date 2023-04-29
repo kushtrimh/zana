@@ -3,7 +3,7 @@ Provides functions and types to manage HTTP requests, request parameters, and re
 
 This module provides functions that create successful and failed responses, retrieve parameters from requests,
 and deal with HTTP error handling.
-*/
+ */
 use core::fmt;
 use std::fmt::{Debug, Formatter};
 use std::str::FromStr;
@@ -143,7 +143,7 @@ impl FailureResponse {
 ///
 /// Ratings are by default not required, and set to `None`, since not all providers may support them,
 /// and not all books will have ratings attached when retrieved from providers.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SuccessResponse {
     pub data: BookData,
     pub rating: Option<RatingData>,
@@ -156,7 +156,7 @@ impl SuccessResponse {
 }
 
 /// Represents a book and some of its data.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BookData {
     pub page_count: u32,
     pub description: String,
@@ -174,7 +174,7 @@ impl BookData {
 }
 
 /// Represents a ratings about a specific book.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RatingData {
     pub average_rating: f32,
     pub ratings_count: u32,
@@ -245,13 +245,13 @@ pub fn request_type(request: &impl RequestExt) -> Result<RequestType, ResponseEr
             Err(_) => {
                 return Err(ResponseError::MissingParameter(String::from(
                     "Invalid type",
-                )))
+                )));
             }
         },
         None => {
             return Err(ResponseError::MissingParameter(String::from(
                 "Type is required",
-            )))
+            )));
         }
     };
     Ok(request_type)
@@ -260,8 +260,8 @@ pub fn request_type(request: &impl RequestExt) -> Result<RequestType, ResponseEr
 #[cfg(test)]
 mod tests {
     use crate::http::{
-        failure_response, query_parameter, request_type, success_response, RequestType,
-        ResponseError,
+        failure_response, query_parameter, request_type, success_response, FailureResponse,
+        RequestType, ResponseError, SuccessResponse,
     };
     use lambda_http::aws_lambda_events::query_map::QueryMap;
     use lambda_http::ext::PayloadError;
@@ -355,6 +355,34 @@ mod tests {
         }
     }
 
+    fn assert_book_success_response(book: &Book) {
+        let response = success_response(&book).expect("response expected to be present");
+        let body = String::from_utf8(response.body().to_vec()).expect("utf8 string expected");
+        let response_book: SuccessResponse =
+            serde_json::from_str(&body).expect("response expected to be parsed");
+
+        assert_eq!(StatusCode::OK, response.status());
+        assert_book_equality(book, response_book);
+    }
+
+    fn assert_book_equality(book: &Book, response_book: SuccessResponse) {
+        assert_eq!(book.page_count, response_book.data.page_count);
+        assert_eq!(book.provider_link, response_book.data.provider_link);
+        assert_eq!(book.description, response_book.data.description);
+
+        if let Some(book_rating) = &book.rating {
+            let response_book_rating = response_book.rating.expect("rating expected");
+            assert_eq!(
+                book_rating.ratings_count,
+                response_book_rating.ratings_count
+            );
+            assert_eq!(
+                book_rating.average_rating,
+                response_book_rating.average_rating
+            );
+        }
+    }
+
     #[test]
     fn gb_request_type_from_query_param() {
         let request_type = RequestType::from_str("googlebooks")
@@ -414,10 +442,12 @@ mod tests {
     fn response_from_response_error() {
         let error_message = String::from("ISBN parameter missing");
         let response_error = ResponseError::MissingParameter(error_message.clone());
-        let expected_response = "{\"error\":\"MissingParameter\",\"details\":\"ISBN parameter missing\",\"status_code\":400}";
+        let expected_error = FailureResponse::new(&response_error);
 
         let response = failure_response(response_error).expect("response expected to be present");
         let body = String::from_utf8(response.body().to_vec()).expect("utf8 string expected");
+        let expected_response =
+            serde_json::to_string(&expected_error).expect("could not convert to json");
 
         assert_eq!(StatusCode::BAD_REQUEST, response.status());
         assert_eq!(expected_response, body);
@@ -432,13 +462,7 @@ mod tests {
             "http://localhost/link/to/book",
             rating,
         );
-        let expected_body = "{\"data\":{\"page_count\":531,\"description\":\"Book description here\",\"provider_link\":\"http://localhost/link/to/book\"},\"rating\":{\"average_rating\":4.5,\"ratings_count\":123}}";
-
-        let response = success_response(&book).expect("response expected to be present");
-        let body = String::from_utf8(response.body().to_vec()).expect("utf8 string expected");
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(expected_body, body);
+        assert_book_success_response(&book);
     }
 
     #[test]
@@ -448,13 +472,7 @@ mod tests {
             "Book description here",
             "http://localhost/link/to/book",
         );
-        let expected_body = "{\"data\":{\"page_count\":531,\"description\":\"Book description here\",\"provider_link\":\"http://localhost/link/to/book\"},\"rating\":null}";
-
-        let response = success_response(&book).expect("response expected to be present");
-        let body = String::from_utf8(response.body().to_vec()).expect("utf8 string expected");
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(expected_body, body);
+        assert_book_success_response(&book);
     }
 
     #[test]

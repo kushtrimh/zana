@@ -1,0 +1,32 @@
+{
+  "name": "zana",
+  "version": "0.1.0",
+  "description": "'Quality of life' extension for websites that sell books.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kushtrimh/zana.git"
+  },
+  "keywords": [
+    "extension"
+  ],
+  "author": "Kushtrim Hajrizi",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/kushtrimh/zana/issues"
+  },
+  "homepage": "https://github.com/kushtrimh/zana#readme",
+  "jest": {
+    "projects": [
+      "<rootDir>/tests/dukagjinibooks/dukagjinibooks.jest.config.js"
+    ]
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
+    "jsdom": "^21.1.1"
+  }
+}

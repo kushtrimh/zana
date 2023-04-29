@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-        # Setup Rust and run tests in zana and zana_lambda services
       - uses: actions/checkout@v3
+        # Rust, Zig and Cargo Lambda setup
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install Zig toolchain
@@ -30,29 +30,42 @@ jobs:
           tag: v0.19.0
           platform: linux
           arch: x86_64
+        # Zana build and test runs
       - name: Build zana service
         working-directory: services/zana
         run: cargo build --verbose
       - name: Run tests in zana service
         working-directory: services/zana
         run: cargo test --verbose
+        # Zana Lambda build and test runs
       - name: Build zana_lambda service
         working-directory: services/zana_lambda
         run: cargo lambda build --release --output-format zip --verbose
       - name: Run tests in zana_lambda service
         working-directory: services/zana_lambda
         run: cargo test --verbose
-        # Setup Java and run tests in zana_aws service
+        # NodeJS and AWS CDK setup
       - name: Install Node.js toolchain
         uses: actions/setup-node@v3
         with:
           node-version: 18
       - run: npm install -g aws-cdk@2.67.0
+        # Java setup
       - name: Install Java 17 toolchain
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
+        # Zana AWS test runs
       - name: Run tests in zana_aws service
         working-directory: deployment/zana_aws
         run: mvn clean compile && mvn clean test
+        # Web-ext setup
+      - run: npm install -g web-ext@7.6.1
+        # Extension linting and test runs
+      - name: Lint zana extension
+        working-directory: extension/addon/
+        run: web-ext lint
+      - name: Run tests in zana extension
+        working-directory: extension/
+        run: npm install && npm test

@@ -1,0 +1,98 @@
+.dukagjinibooks-container {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 16px;
+    /* box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1); */
+    margin: 0 0 20px;
+    padding: 2em;
+    color: #7a7777;
+}
+
+@media (max-width: 1280px) {
+    .dukagjinibooks-container {
+        margin: 0 5px !important;
+    }
+}
+
+.dukagjinibooks-ratings-container {
+    color: #ffcc00;
+    font-size: 1.5em;
+    line-height: 1em;
+    display: block;
+    width: 100%;
+}
+
+.dukagjinibooks-rating {
+    display: block;
+    margin: 0 0 1em;
+}
+
+.dukagjinibooks-stars {
+    color: #f1a60d;
+    text-align: center;
+    display: inline-block;
+}
+
+.dukagjinibooks-star {
+    margin-right: 5px;
+}
+
+.dukagjinibooks-rating-type {
+    padding-right: 2em;
+    display: inline-block;
+    width: 7.5em;
+}
+
+.dukagjinibooks-rating-data {
+    font-size: 14px;
+    color: #b8b4b4;
+    font-weight: 700;
+    margin-left: 0.5em;
+    display: inline-block;
+}
+
+.dukagjinibooks-metadata-container {
+    display: block;
+    font-size: 14px;
+    color: #7a7777;
+    font-weight: 700;
+    margin: 1em 0;
+}
+
+.dukagjinibooks-rating-type-image {
+    margin-left: 10px;
+    padding-top: 7px;
+}
+
+.dukagjinibooks-rating-external-link {
+    margin-left: 2px;
+    fill: #d8565b;
+}
+
+.dukagjinibooks-rating-external-link-image {
+    padding-top: 7px;
+}
+
+.dukagjinibooks-description {
+    display: block;
+    width: 100%;
+}
+
+.dukagjinibooks-loading-container {
+    width: 100%;
+}
+
+.dukagjinibooks-loading-image {
+    display: block;
+    margin: auto;
+}
+
+.dukagjinibooks-missing-data-container {
+    display: block;
+    margin: auto;
+}
+
+.dukagjinibooks-missing-data-app-name {
+    font-weight: 700;
+    color: #d8565b;
+}
