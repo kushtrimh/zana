@@ -53,41 +53,20 @@ dukagjini.init = function () {
         }
     }
 
-    function handle(event) {
-        let loadingElement = document.querySelector('.dukagjinibooks-loading-container');
-        if (loadingElement) {
-            loadingElement.remove();
-        }
+    function createMissingDataElement() {
+        let missingDataContainer = document.createElement('div');
+        missingDataContainer.className = 'dukagjinibooks-missing-data-container';
+        missingDataContainer.textContent = ' did not find any data for this book.';
 
-        let responses = event.detail.responses;
-        // TODO: check if response is okay
+        let missingDataAppName = document.createElement('span');
+        missingDataAppName.className = 'dukagjinibooks-missing-data-app-name';
+        missingDataAppName.textContent = 'Zana';
 
-        let bookDetailsNode = document.querySelector('#book-details .container');
+        missingDataContainer.prepend(missingDataAppName);
+        return missingDataContainer;
+    }
 
-        let existingContainer = document.querySelector('.dukagjinibooks-container');
-        if (existingContainer) {
-            // Container already exists, don't add it again
-            return;
-        }
-        // Create book data container
-        let dataContainer = document.createElement('div');
-        dataContainer.className = 'row dukagjinibooks-container';
-
-        // Create ratings container
-        let ratingsContainer = document.createElement('div');
-        ratingsContainer.className = 'dukagjinibooks-ratings-container';
-
-        for (let response of responses) {
-            let rating = response.body.rating;
-            if (rating) {
-                let ratingsElement = createRatings(response.type, rating, response.body.data.provider_link);
-                ratingsContainer.appendChild(ratingsElement);
-            } else {
-                // TODO: add message that no rating was found
-            }
-        }
-        dataContainer.appendChild(ratingsContainer);
-
+    function addBookMetadata(responses, dataContainer) {
         let numberOfPages;
         let description;
         for (let response of responses) {
@@ -109,7 +88,53 @@ dukagjini.init = function () {
             const descriptionElement = createDescription(description);
             dataContainer.appendChild(descriptionElement);
         }
+    }
 
+    function addRatings(responses, dataContainer) {
+        let ratingsContainer = document.createElement('div');
+        ratingsContainer.className = 'dukagjinibooks-ratings-container';
+
+        for (let response of responses) {
+            let rating = response.body.rating;
+            if (rating) {
+                let ratingsElement = createRatings(response.type, rating, response.body.data.provider_link);
+                ratingsContainer.appendChild(ratingsElement);
+            }
+        }
+        dataContainer.appendChild(ratingsContainer);
+    }
+
+    function handle(event) {
+        let loadingElement = document.querySelector('.dukagjinibooks-loading-container');
+        if (loadingElement) {
+            loadingElement.remove();
+        }
+
+        let bookDetailsNode = document.querySelector('#book-details .container');
+
+        let existingContainer = document.querySelector('.dukagjinibooks-container');
+        if (existingContainer) {
+            // Container already exists, don't add it again
+            return;
+        }
+        // Create book data container
+        let dataContainer = document.createElement('div');
+        dataContainer.className = 'row dukagjinibooks-container';
+
+        // Keep only the successful responses
+        let responses = event.detail.responses;
+        responses = responses.filter(response => response.status === 200);
+
+        if (responses.length === 0) {
+            let missingDataElement = createMissingDataElement();
+            dataContainer.appendChild(missingDataElement);
+            bookDetailsNode.append(dataContainer);
+            console.log('Zana response: ', event.detail.responses);
+            return;
+        }
+
+        addRatings(responses, dataContainer);
+        addBookMetadata(responses, dataContainer);
         bookDetailsNode.append(dataContainer);
     }
 
@@ -117,8 +142,8 @@ dukagjini.init = function () {
         let metadataContainer = document.createElement('div');
         metadataContainer.className = 'dukagjinibooks-metadata-container';
         metadataContainer.textContent = `
-        Number of pages: ${numberOfPages}
-    `;
+            Number of pages: ${numberOfPages}
+        `;
         return metadataContainer;
     }
 

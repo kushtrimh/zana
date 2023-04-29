@@ -79,3 +79,13 @@
     display: block;
     margin: auto;
 }
+
+.dukagjinibooks-missing-data-container {
+    display: block;
+    margin: auto;
+}
+
+.dukagjinibooks-missing-data-app-name {
+    font-weight: 700;
+    color: #d8565b;
+}
