@@ -33,6 +33,10 @@
     display: inline-block;
 }
 
+.dukagjinibooks-star {
+    margin-right: 5px;
+}
+
 .dukagjinibooks-rating-type {
     padding-right: 2em;
     display: inline-block;
