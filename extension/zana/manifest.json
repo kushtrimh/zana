@@ -36,7 +36,8 @@
   "web_accessible_resources": [
     "images/powered_by_googlebooks.png",
     "images/powered_by_openlibrary.svg",
-    "images/dukagjini_external_link.svg",
+    "images/dukagjini/external_link.svg",
+    "images/dukagjini/loading.gif",
     "css/dukagjinibooks.css"
   ]
 }

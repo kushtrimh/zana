@@ -30,6 +30,8 @@ function update() {
 }
 
 function notify(isbn) {
+    hostConfig.loading();
+
     const responsePromises = retrieveBookData(isbn);
     Promise.all(responsePromises)
         .then(responses => {

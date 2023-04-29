@@ -70,3 +70,12 @@
     display: block;
     width: 100%;
 }
+
+.dukagjinibooks-loading-container {
+    width: 100%;
+}
+
+.dukagjinibooks-loading-image {
+    display: block;
+    margin: auto;
+}

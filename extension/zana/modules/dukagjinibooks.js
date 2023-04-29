@@ -17,9 +17,23 @@ dukagjini.retrieveIsbn = function () {
     }
 }
 
+dukagjini.loading = function() {
+    let bookDetailsNode = document.querySelector('#book-details .container');
+
+    let loadingContainer = document.createElement('div');
+    loadingContainer.className = 'dukagjinibooks-loading-container';
+
+    let loadingImage = document.createElement('img');
+    loadingImage.src = browser.runtime.getURL('images/dukagjini/loading.gif');
+    loadingImage.className = 'dukagjinibooks-loading-image';
+    loadingImage.alt = 'Loading...';
+
+    loadingContainer.appendChild(loadingImage);
+    bookDetailsNode.append(loadingContainer);
+}
+
 dukagjini.init = function () {
     window.addEventListener(dukagjini.eventName, handle);
-
 
     let dukagjiniProviderData = {
         googlebooks: {
@@ -40,9 +54,13 @@ dukagjini.init = function () {
     }
 
     function handle(event) {
-        let responses = event.detail.responses;
+        let loadingElement = document.querySelector('.dukagjinibooks-loading-container');
+        if (loadingElement) {
+            loadingElement.remove();
+        }
 
-        // TODO: Check if response if valid
+        let responses = event.detail.responses;
+        // TODO: check if response is okay
 
         let bookDetailsNode = document.querySelector('#book-details .container');
 
@@ -145,7 +163,7 @@ dukagjini.init = function () {
         ratingsElement.appendChild(ratingExternalLinkElement);
 
         let ratingExternalLinkImageElement = document.createElement('img');
-        ratingExternalLinkImageElement.src = browser.runtime.getURL('images/dukagjini_external_link.svg');
+        ratingExternalLinkImageElement.src = browser.runtime.getURL('images/dukagjini/external_link.svg');
         ratingExternalLinkImageElement.className = 'dukagjinibooks-rating-external-link';
         ratingExternalLinkElement.appendChild(ratingExternalLinkImageElement);
 
