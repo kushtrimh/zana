@@ -17,6 +17,7 @@ public class ZanaAwsApp {
                 .orElseThrow(() -> new IllegalArgumentException("AWS region environment variable not provided"));
         var account = Optional.ofNullable(System.getenv("CDK_DEFAULT_ACCOUNT"))
                 .orElseThrow(() -> new IllegalArgumentException("AWS account environment variable not provided"));
+        // Environment is set by default as prod, but can be overridden by ZANA_ENV environment variable
         var zanaEnv = Optional.ofNullable(System.getenv("ZANA_ENV"))
                 .orElse("prod");
 

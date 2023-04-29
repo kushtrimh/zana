@@ -1,8 +1,14 @@
+/*
+ This module is used to handle any functionality related with dukagjinibooks.com.
+ */
+
+// Host configuration
 let dukagjiniBooks = {
     eventName: 'dukagjiniEvent',
     queryBookData: true,
 };
 
+// Required function used to retrieve the ISBN, which is used to query the book data.
 dukagjiniBooks.retrieveIsbn = function () {
     let bookItems = document.querySelectorAll('.book-item-specifics h5 span');
     let isbnItem;
@@ -17,6 +23,7 @@ dukagjiniBooks.retrieveIsbn = function () {
     }
 }
 
+// Required function used to display a loading indicator.
 dukagjiniBooks.loading = function () {
     let bookDetailsNode = document.querySelector('#book-details .container');
 
@@ -32,7 +39,10 @@ dukagjiniBooks.loading = function () {
     bookDetailsNode.append(loadingContainer);
 }
 
+// Required function used to initialize any needed function and event listener.
 dukagjiniBooks.init = function () {
+
+    // Add an event listener to the custom event dispatched by the content script.
     window.addEventListener(dukagjiniBooks.eventName, handle);
 
     let dukagjiniProviderData = {
@@ -42,7 +52,6 @@ dukagjiniBooks.init = function () {
                 url: browser.runtime.getURL('images/powered_by_googlebooks.png'),
                 width: 60,
             },
-
         },
         openlibrary: {
             label: 'OpenLibrary',
@@ -69,6 +78,9 @@ dukagjiniBooks.init = function () {
     function addBookMetadata(responses, dataContainer) {
         let numberOfPages;
         let description;
+        // If page count is available from the first provider, then use it, otherwise continue to the next provider
+        // until an available page count is found. If no page count is found, then it is not displayed.
+        // Same logic is applied for the description.
         for (let response of responses) {
             const data = response.body.data;
             if (data.page_count && !numberOfPages) {
@@ -79,7 +91,6 @@ dukagjiniBooks.init = function () {
             }
         }
 
-        // Book metadata
         if (numberOfPages) {
             const numberOfPagesElement = createBookMetadata(numberOfPages);
             dataContainer.appendChild(numberOfPagesElement);
@@ -94,6 +105,8 @@ dukagjiniBooks.init = function () {
         let ratingsContainer = document.createElement('div');
         ratingsContainer.className = 'dukagjinibooks-ratings-container';
 
+        // Available ratings are displayed in the order they are received from the providers.
+        // If no ratings are available, then the ratings container is not displayed.
         for (let response of responses) {
             let rating = response.body.rating;
             if (rating) {
@@ -244,6 +257,7 @@ dukagjiniBooks.init = function () {
     }
 }
 
+// Used to make this module available for unit testing
 if (typeof module !== 'undefined') {
     module.exports = {
         dukagjiniBooks: dukagjiniBooks
