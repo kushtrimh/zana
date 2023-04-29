@@ -6,7 +6,7 @@ const apiUrl = 'https://api.zanareads.com/books';
 
 const host = window.location.host;
 const hostsConfig = {
-    'dukagjinibooks.com': dukagjini,
+    'dukagjinibooks.com': dukagjiniBooks,
 };
 
 const hostConfig = hostsConfig[host];

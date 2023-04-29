@@ -66,8 +66,11 @@
 
 .dukagjinibooks-rating-external-link {
     margin-left: 2px;
-    padding-top: 7px;
     fill: #d8565b;
+}
+
+.dukagjinibooks-rating-external-link-image {
+    padding-top: 7px;
 }
 
 .dukagjinibooks-description {
