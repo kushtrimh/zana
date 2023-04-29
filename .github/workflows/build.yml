@@ -68,4 +68,4 @@ jobs:
         run: web-ext lint
       - name: Run tests in zana extension
         working-directory: extension/
-        run: npm test
+        run: npm install && npm test
