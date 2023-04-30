@@ -9,7 +9,7 @@ The data is retrieved from a list of third-party book APIs.
 ## Installation
 
 You can install the extension from the following stores:
-- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/zana/)
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/zanareads/)
 - [Chrome](https://chrome.google.com/webstore/detail/zana/dfjgjgjgjgjgjgjgjgjgjgjgjgjgjgj)
 - [Edge](https://microsoftedge.microsoft.com/addons/detail/zana/dfjgjgjgjgjgjgjgjgjgjgjgjgjgjg)
 

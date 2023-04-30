@@ -5,22 +5,24 @@ Thank you for taking time to contribute to Zana.
 In this guide you will get an overview of the contribution workflow from opening an issue, creating a PR, reviewing, and merging the PR.
 The guide will also show you how to set up your local environment for making changes to, building and testing Zana.
 
-By participating to Zana, you are expected to uphold our code of conduct, which you can read about here: [Code of Conduct](todo add)
+By participating to Zana, you are expected to uphold our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ### Table of Contents
 
 - [Reporting a Bug](#reporting-a-bug)
 - [Suggesting Enhancements](#suggesting-enhancements)
-- [Local Setup](#local-setup)
+- [Local Setup and Development](#local-setup-and-development)
 - [Style Guides](#style-guides)
   - [Git Commit Messages](#git-commit-messages)
   - [Services/Release (Rust) Style Guides](#services-style-guides)
-  - [Extension (NodeJS) Style Guides](#extension-style-guides)
+  - [Extension (JavaScript) Style Guides](#extension-style-guides)
   - [Deployment (Java) Style Guides](#deployment-style-guides)
 - [Your First Contribution](#your-first-contribution)
 - [Pull Requests](#pull-requests)
 - [Adding Support For a New Bookstore](#adding-support-for-a-new-bookstore)
 - [How To Handle Breaking Changes](#how-to-handle-breaking-changes)
+
+## Reporting a Bug
 
 
 
