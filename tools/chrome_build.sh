@@ -9,5 +9,3 @@ if [ "$1" = "--release" ]; then
     mkdir -p dist.chrome.mv3.release
     zip -r dist.chrome.mv3.release/extension.zip dist.chrome.mv3.build
 fi
-
-
