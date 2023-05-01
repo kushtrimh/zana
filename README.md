@@ -62,5 +62,5 @@ Zana uses AWS as the cloud provider, and is built around its serverless services
 ### Deployment and releases
 
 Each PR that is merged into the `main` branch triggers the deployment pipeline, and with each deployment
-a new release is created. Except the `extension` all other modules are built and deployed automatically.
-The extension is built manually, and then submitted into the browser stores as an update.
+a new release is created (_This process may change in the future_).
+Except the `extension` which is built and published manually, all other modules are built and deployed automatically.

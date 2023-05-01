@@ -9,6 +9,7 @@ By participating to Zana, you are expected to uphold our [Code of Conduct](./COD
 
 ### Table of Contents
 
+- [Questions and discussions](#questions-and-discussions)
 - [Reporting a Bug](#reporting-a-bug)
 - [Suggesting Enhancements](#suggesting-enhancements)
 - [Local Setup and Development](#local-setup-and-development)
@@ -22,11 +23,31 @@ By participating to Zana, you are expected to uphold our [Code of Conduct](./COD
 - [Adding Support For a New Bookstore](#adding-support-for-a-new-bookstore)
 - [How To Handle Breaking Changes](#how-to-handle-breaking-changes)
 
+## Questions and discussions
+
+If you have any question, suggestion or you are interested to discuss Zana, feel free to add a comment with your question or suggestion at the open
+[Zana Q&A](https://github.com/kushtrimh/zana/discussions/17) discussion, or create a new discussion yourself at our [discussions](https://github.com/kushtrimh/zana/discussions) page.
+
 ## Reporting a Bug
 
+If you come across any problem with Zana, and you want to report an issue, you can follow this guide.
+Before reporting a new bug however, please check the [issues](https://github.com/kushtrimh/zana/issues) page in case
+a similar bug has already been reported.
 
+To create a bug issue, you can go to the [issues](https://github.com/kushtrimh/zana/issues) page and click on the `New issue` button.
+You will be redirected to another page with a list of issues templates, and there you can choose the `Bug report` template.
 
+For the title of the bug, please give something short that best describes your problem.
+On the bug report content pane, a list of headings will show the expected information.
+Please make sure to add as many details as you can. 
+Steps to reproduce, console log errors, screenshots and browser type and version are particularly helpful to resolve the issue faster.
 
+You can preview the bug issue template [here](.github/ISSUE_TEMPLATE/bug_report.md).
+
+If you simply have a question and Zana, please do not raise a new bug issue for it, instead check our 
+[questions and discussions](#questions-and-discussions) section.
+
+## Suggesting Enhancements
 
 
 
