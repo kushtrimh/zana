@@ -10,5 +10,5 @@ Violations of the Code of Conduct may be reported by sending an email to *kushtr
 All reports will be reviewed and investigated and will result in a response that is deemed necessary and appropriate to the circumstances. 
 Further details of specific enforcement policies may be posted separately.
 
-We hold the right and responsibility to remove comments or other contributions that are not aligned to this Code of Conduct,
-or to ban temporarily or permanently any members for other behaviours that are deemed inappropriate, threatening, offensive, or harmful. 
+We hold the right and responsibility to remove comments or other contributions that are not aligned with this Code of Conduct,
+or to ban temporarily or permanently any members for other behaviors that are deemed inappropriate, threatening, offensive, or harmful. 
