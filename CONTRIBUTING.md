@@ -21,7 +21,6 @@ By participating to Zana, you are expected to uphold our [Code of Conduct](./COD
   - [Services/Release (Rust) Style Guides](#services-style-guides)
   - [Extension (JavaScript) Style Guides](#extension-style-guides)
   - [Deployment (Java) Style Guides](#deployment-style-guides)
-- [Your First Contribution](#your-first-contribution)
 - [Pull Requests](#pull-requests)
 - [Adding Support For a New Bookstore](#adding-support-for-a-new-bookstore)
 - [How To Handle Breaking Changes](#how-to-handle-breaking-changes)
@@ -400,7 +399,7 @@ Services that are built with Rust follow the standard [code conventions](https:/
 
 - 4 spaces indentation
 - Use _snake_case_ for variables and functions
-- Use _CamelCase_ for types
+- Use _UpperCamelCase_ for types
 - When adding a new module 2 or three words in the name, use underscore as the delimiter
 - Unit tests in the same file, rather in the `tests` directory
 - Integration tests in the `tests` directory
@@ -412,6 +411,8 @@ The code is formatted using `cargo fmt`. All the Rust crates in Zana should foll
 ### Extension style guides
 
 - 4 spaces for indentation for HTML, CSS and JavaScript
+- Use _UpperCamelCase_ for types
+- Use _camelCase_ for variables and functions
 - Use the same bookstore identifier across different files. (e.g. `Bookstore XYZ` -> `bookstorexyz`)
 - Use the bookstore identifier to name CSS files in the `extension/addon/css` directory
 - Use the bookstore identifier to name JavaScript modules in the `extension/addon/modules` directory
@@ -422,9 +423,236 @@ The `Dukagjini Bookstore` implementation can be seen as a reference.
 ### Deployment style guides
 
 - 4 spaces for indentation
+- Use _UpperCamelCase_ for types
+- Use _camelCase_ for variables and methods
 - Formatting is done using the default formatting style for Java in _IntelliJ Idea_
 - In tests use `Map.of` for adding props that will not need to be updated
 - In tests use `MutableMapFactory.of` for props that need to be updated
 - Use private helper methods for props of a resources that is used multiple times
+- Prefix test names with the resource that is being tested (e.g. `zanaLambda_LambdaLogRetentionIsConfiguredProperly`)
 
+## Pull requests
 
+When creating a pull requests please follow the following steps:
+
+- Ensure the pull request has a descriptive title of the fixed bug or the added feature/improvement.
+- In the content pane, add a description of the made changes
+- Ensure all the status checks have passed
+- Make sure the code follows the [style guides](#style-guides)
+
+Once a PR is approved, it can be merged and right after that it should be deployed in production.
+Changes made to the extension itself will be packaged and distributed to browser addon stores manually by the owner
+after the PR is merged.
+
+## Adding support for a new bookstore
+
+Adding a new bookstore requires changes only in the `extension` itself, as long as the current features
+provided by `services` are used.
+
+To add a support for a new bookstore, first add the required permissions and resources (CSS, JavaScript, images) in the manifest
+files for both Firefox and Chrome.
+
+- Firefox `manifest.json` location -> `extension/addon/manifest.json`
+- Chrome `manifest.json` location -> `extension/platform/chrome/manifest.json`
+
+Keep in mind that slight changes in the manifest files may appear, since Firefox uses _Manifest v2_
+and Chrome uses _Manifest v3_.
+
+Once the manifest files are updated, add new CSS files and the JavaScript module files for the new bookstore.
+
+- CSS files location -> `extension/addon/css/`
+- JavaScript bookstore modules location -> `extension/addon/modules/`
+
+The new module is responsible for managing the data and the DOM for the new bookstore.
+At the top of the module, add the module configuration.
+
+```js
+let bookstorexyz = {
+    eventName: 'bookstorexyzEvent',
+    queryBookData: true,
+};
+```
+
+The `eventName` will be used by the content scripts to send events to the module, and `queryBookData`
+is a flag that describes whether this module queries data from the services.
+
+`content_scripts.js` file expects a list of functions to be available in the module configuration.
+
+### `bookstorexyz.init = function()`
+
+`init` function is used to add the required event listeners, and define any other functions
+that will handle the DOM changes once an event is received.
+
+```js
+bookstorexyz.init = function() {
+    window.addEventListener(bookstorexyz.eventName, handle);
+    // ...
+  
+    function handle(event) {
+        // ...
+    }
+    
+    // ...
+}
+```
+
+You can access the response in the `handle` function from the `event` parameter.
+
+```js
+let responses = event.detail.responses;
+```
+
+`responses` objects will have the following format if all the responses were successful:
+
+```json
+[
+  {
+    "isbn": "9780261102385",
+    "body": {
+      "data": {
+        "page_count": 1000,
+        "description": "Description 1",
+        "provider_link": "http://localhost/book/1"
+      },
+      "rating": {
+        "average_rating": 4.5,
+        "ratings_count": 100
+      }
+    },
+    "status": 200,
+    "type": "googlebooks"
+  },
+  {
+    "isbn": "9780261102385",
+    "body": {
+      "data": {
+        "page_count": 1000,
+        "description": "Description 2",
+        "provider_link": "http://localhost/book/2"
+      },
+      "rating": {
+        "average_rating": 4.75,
+        "ratings_count": 50
+      }
+    },
+    "status": 200,
+    "type": "openlibrary"
+  }
+]
+```
+
+In case there are errors in the response, they will be returned in the following format.
+
+```json
+[
+  {
+    "isbn": "9780261102385",
+    "body": {
+      "error": "NotFound",
+      "details": "Book not found",
+      "status_code": 404
+    },
+    "status": 404,
+    "type": "googlebooks"
+  },
+  {
+    "isbn": "9780261102385",
+    "body": {
+      "error": "NotFound",
+      "details": "Book not found",
+      "status_code": 404
+    },
+    "status": 404,
+    "type": "openlibrary"
+  }
+]
+```
+
+Keep in mind that the status of the responses may be different. A book might be found on one third-party API, but not in the other
+and in the same pattern, a request to one third-party API might fail, while the other ones succeeds.
+Each response should be checked individually.
+
+### `bookstorexyz.retrieveIsbn = function()`
+
+This function should return an ISBN, which it should be able to get once the page is loaded.
+If not ISBN is returned, no data will be displayed.
+
+### `bookstorexyz.loading()`
+
+Once a request is sent to the `services`, the loading function will be executed by the `content_script.js`.
+`loading` is responsible to display a loader on the screen until the requests sent to `services` are completed.
+The `handle` method in the module is responsible to remove the loader once an event is received.
+
+### Adding configuration for the new bookstore
+
+In `content_script.js` add a new entry on the `hostConfig` object where the key is the hostname of the new bookstore website
+and the value is the module configuration variable name.
+
+```js
+const hostsConfig = {
+    // ...
+    'bookstorexyz.com': bookstorexyz,
+};
+```
+
+In `background.js` add the target URLs in the `targets` objects.
+Once a request is sent to the defined target URL, the page will be updated.
+This is done for _Single Page Applications_, so once a new book is retrieved, we assume that a new page will be displayed for that book,
+and in that case the data should be retrieved again from services and displayed in the updated 'page'.
+
+In the same file, add the required configuration on the `hostsConfig` object where the key is the hostname of the new bookstore website
+and the value is an object that defines a regex pattern that is used on top of the `targets` URLs in case the `targets` is not specific enough.
+If the URL defined in `targets` is specific enough, then simply set the `pattern` field to an empty string, and `skipPatternCheck` to `true`.
+
+```js
+let targets = [
+    // ...
+    "https://bookstorexyz.com/api/products/*"
+];
+
+let hostsConfig = {
+    // ...
+    'bookstorexyz.com': {
+        pattern: /^https:\/\/bookstorexyz\.com\/api\/products\/\d+$/,
+        skipPatternCheck: false,
+    }
+}
+```
+
+As shown in the example above, the regex pattern is used in case the `/products/*` path is used when retrieving other API resources as well.
+If we want to update the page only when `https://bookstorexyz.com/api/products/1251235` is called, then we would need to add the regex pattern as well
+in case the bookstore website has other API calls that have the same path e.g. `https://bookstorexyz.com/api/products/123512/info` or 
+`https://bookstorexyz.com/api/products/12356123/ratings`.
+
+By adding a regex pattern for the URLs we ensure that the update is called only when required.
+
+### Adding tests for the new bookstore
+
+All tests should be added under the `extension/tests` directory, which contains separate directories for each bookstore.
+A `jest` config file is required for each bookstore, and that should be configured on that `package.json` as a separate project
+in the `jest` config entry.
+
+```json
+{
+  "jest": {
+    "projects": [
+      "<rootDir>/tests/dukagjinibooks/dukagjinibooks.jest.config.js",
+      "<rootDir>/tests/bookstorexyz/bookstorexyz.jest.config.js"
+    ]
+  }
+}
+```
+
+Tests should have an HTML file that represents a section of the bookstore websites where the data is added, so tests can be
+as close as possible to the actual bookstore website.
+
+Please check the implementation of `Dukagjini Bookstore` as an example.
+
+## How to handle breaking changes
+
+Considering that the extension updates could take time until they're reviewed and approved, breaking changes should be handled
+in a manner that do not break other bookstores. If breaking API changes are made into the `services`, then a new _lambda_ should be 
+created that contains the new changes, or the current _lambda_ should be changed to handle requests differently based on a version.
+
+No final decision is yet made on how breaking changes will be handled.
+A step-by-step guide will be provided _soon_.

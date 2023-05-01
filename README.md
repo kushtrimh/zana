@@ -32,6 +32,8 @@ For any questions or discussions, please check the [Questions and Discussions](.
 
 If you're interested in contributing to the project, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
+To add support for a new bookstore please check the [Adding Support For a New Bookstore](./CONTRIBUTING.md#adding-support-for-a-new-bookstore) guide.
+
 ## Local setup, development and building
 
 For setting up, building, and testing Zana locally, please check the [Local Setup and Development](./CONTRIBUTING.md#local-setup-and-development) guide.
