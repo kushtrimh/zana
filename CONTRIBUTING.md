@@ -13,6 +13,9 @@ By participating to Zana, you are expected to uphold our [Code of Conduct](./COD
 - [Reporting a Bug](#reporting-a-bug)
 - [Suggesting Enhancements](#suggesting-enhancements)
 - [Local Setup and Development](#local-setup-and-development)
+  - [Services](#services)
+  - [Deployment](#deployment)
+  - [Extension](#extension)
 - [Style Guides](#style-guides)
   - [Git Commit Messages](#git-commit-messages)
   - [Services/Release (Rust) Style Guides](#services-style-guides)
@@ -75,14 +78,14 @@ The whole extension package will be migrated and adapted to *Manifest v3* in the
 
 ### Required tools
 
-- [Rust](https://www.rust-lang.org/) 1.68.0 (`services`, `release`)
-- [Cargo Lambda](https://www.cargo-lambda.info/) 0.17.1 (`services`)
-- [Node.js](https://nodejs.org/en) v18.14.2 (`extension`, `deployment`)
-- [Web-ext](https://github.com/mozilla/web-ext) 7.6.1 (`extension`)
-- [AWS CLI](https://aws.amazon.com/cli/) 2.10.3 (`deployment`)
-- [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) 2.67.0 (`deployment`)
+- [Rust](https://www.rust-lang.org/) >=1.68.0 (`services`, `release`)
+- [Cargo Lambda](https://www.cargo-lambda.info/) >=0.17.1 (`services`)
+- [Node.js](https://nodejs.org/en) >=v18.14.2 (`extension`, `deployment`)
+- [Web-ext](https://github.com/mozilla/web-ext) >=7.6.1 (`extension`)
+- [AWS CLI](https://aws.amazon.com/cli/) >=2.10.3 (`deployment`)
+- [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) >=2.67.0 (`deployment`)
 - [Java](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) 17 (`deployment`)
-- [Maven](https://maven.apache.org/) 3.8.1>= (`deployment`)
+- [Maven](https://maven.apache.org/) >=3.8.1 (`deployment`)
 - WSL, Git Bash or anything similar (`tools`)
 
 You can not need all those tools, if you please on building/testing only certain parts of the application.
@@ -374,3 +377,54 @@ bash ./tools/chrome_build.sh --release
 The result will be a new directory `dist.chrome.mv3.release` that will contain the zip archive.
 
 ## Style guides
+
+### Git commit messages
+
+- Use present tense, "add feature" instead of "added feature
+- Start the commit messages with the following words:
+  - `doc: ` - when changing documentation and license changes
+  - `cicd: ` - when changing any of the GitHub Actions workflows
+  - `fix: ` or `fix(module-name): ` - when fixing a bug
+  - `feat` or `feat(module-name): ` - when adding new features
+  - `refactor: ` or `refactor(module-name): ` - when making changes to the existing features
+  - `format: ` or `format(module-name): ` - when making formatting changes or improvements
+
+Examples:
+  - `doc: add section for chrome release on contributing page`
+  - `cicd: add steps to build and test zana_lambda`
+  - `feat(services): add new client for xyz API`
+
+### Services style guides
+
+Services that are built with Rust follow the standard [code conventions](https://rustc-dev-guide.rust-lang.org/conventions.html).
+
+- 4 spaces indentation
+- Use _snake_case_ for variables and functions
+- Use _CamelCase_ for types
+- When adding a new module 2 or three words in the name, use underscore as the delimiter
+- Unit tests in the same file, rather in the `tests` directory
+- Integration tests in the `tests` directory
+- Modules should have documentation at the top
+- Public types and their public fields should be documented
+
+The code is formatted using `cargo fmt`. All the Rust crates in Zana should follow those same guidelines.
+
+### Extension style guides
+
+- 4 spaces for indentation for HTML, CSS and JavaScript
+- Use the same bookstore identifier across different files. (e.g. `Bookstore XYZ` -> `bookstorexyz`)
+- Use the bookstore identifier to name CSS files in the `extension/addon/css` directory
+- Use the bookstore identifier to name JavaScript modules in the `extension/addon/modules` directory
+- Prefix CSS selectors with the bookstore identifier. (e.g. `.bookstorexyz-container {}`)
+
+The `Dukagjini Bookstore` implementation can be seen as a reference.
+
+### Deployment style guides
+
+- 4 spaces for indentation
+- Formatting is done using the default formatting style for Java in _IntelliJ Idea_
+- In tests use `Map.of` for adding props that will not need to be updated
+- In tests use `MutableMapFactory.of` for props that need to be updated
+- Use private helper methods for props of a resources that is used multiple times
+
+

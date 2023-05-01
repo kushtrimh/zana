@@ -53,10 +53,10 @@ Modules are organized as follows:
 - `tools` - Scripts that help with extension local development and packaging for certain platforms.
 
 Zana is built primarily for Firefox, but it uses browser polyfills to support Chrome and Edge.
-The _Firefox_ extension is built using *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.
+The _Firefox_ extension is built with *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.
 The whole extension package will be migrated and adapted to *Manifest v3* in the near future.
 
-Support for _Firefox on Android_ is not yet available, but it is planned to be supported in the future.
+Support for _Firefox on Android_ is not yet available, but it is planned to be added in the future.
 
 ### Infrastructure
 
