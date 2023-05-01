@@ -10,8 +10,7 @@ The data is retrieved from a list of third-party book APIs.
 
 You can install the extension from the following stores:
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/zanareads/)
-- [Chrome](https://chrome.google.com/webstore/detail/zana/dfjgjgjgjgjgjgjgjgjgjgjgjgjgjgj)
-- [Edge](https://microsoftedge.microsoft.com/addons/detail/zana/dfjgjgjgjgjgjgjgjgjgjgjgjgjgjg)
+- [Chrome and Edge](https://chrome.google.com/webstore/detail/zana/dfjgjgjgjgjgjgjgjgjgjgjgjgjgjgj)
 
 The extension is not yet on _Microsoft Edge Add-ons_ store, but you can install it from the _Chrome Web Store_.
 
@@ -27,7 +26,7 @@ Zana has the following clients for third-party APIs:
 
 ## Questions and discussions
 
-
+For any questions or discussions, please check the [Questions and Discussions](./CONTRIBUTING.md#questions-and-discussions) guide.
 
 ## Contributing
 
@@ -35,11 +34,13 @@ If you're interested in contributing to the project, please check the [CONTRIBUT
 
 ## Local setup, development and building
 
-TODO: Add link
+For setting up, building, and testing Zana locally, please check the [Local Setup and Development](./CONTRIBUTING.md#local-setup-and-development) guide.
 
 ## Reporting issues or requesting enhancements
 
-TODO: Add link
+To report a bug issue, please check the [Reporting a Bug](./CONTRIBUTING.md#reporting-a-bug) guide.
+
+To suggest an enhancement, please check the [Suggesting Enhancements](./CONTRIBUTING.md#suggesting-enhancements) guide.
 
 ## Project details
 
@@ -49,13 +50,17 @@ Modules are organized as follows:
 - `extension` - Browser extension that is built using WebExtensions API.
 - `deployment` - AWS CDK project that contains the infrastructure.
 - `release` - Rust binary crate that helps with release management.
+- `tools` - Scripts that help with extension local development and packaging for certain platforms.
 
 Zana is built primarily for Firefox, but it uses browser polyfills to support Chrome and Edge.
-It _still_ does not support Firefox for Android, but it is planned to be supported in the future.
+The _Firefox_ extension is built using *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.
+The whole extension package will be migrated and adapted to *Manifest v3* in the near future.
+
+Support for _Firefox on Android_ is not yet available, but it is planned to be supported in the future.
 
 ### Infrastructure
 
-Zana uses AWS as the cloud provider, and is built around its serverless services.
+Zana is deployed on AWS, and it is built around its serverless services.
 
 ![Zana AWS Architecture](./docs/zana_aws.drawio.png)
 

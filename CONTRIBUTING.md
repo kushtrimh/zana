@@ -9,7 +9,7 @@ By participating to Zana, you are expected to uphold our [Code of Conduct](./COD
 
 ### Table of Contents
 
-- [Questions and discussions](#questions-and-discussions)
+- [Questions and Discussions](#questions-and-discussions)
 - [Reporting a Bug](#reporting-a-bug)
 - [Suggesting Enhancements](#suggesting-enhancements)
 - [Local Setup and Development](#local-setup-and-development)
@@ -25,66 +25,83 @@ By participating to Zana, you are expected to uphold our [Code of Conduct](./COD
 
 ## Questions and discussions
 
-If you have any question, suggestion or you are interested to discuss Zana, feel free to add a comment with your question or suggestion at the open
+If you have any questions, or you are interested to discuss about Zana, feel free to add a comment with your question at the open
 [Zana Q&A](https://github.com/kushtrimh/zana/discussions/17) discussion, or create a new discussion yourself at our [discussions](https://github.com/kushtrimh/zana/discussions) page.
 
-## Reporting a Bug
+## Reporting a bug
 
 If you come across any problem with Zana, and you want to report an issue, you can follow this guide.
-Before reporting a new bug however, please check the [issues](https://github.com/kushtrimh/zana/issues) page in case
+Before reporting a new bug issue however, please check the [issues](https://github.com/kushtrimh/zana/issues) page in case
 a similar bug has already been reported.
 
 To create a bug issue, you can go to the [issues](https://github.com/kushtrimh/zana/issues) page and click on the `New issue` button.
-You will be redirected to another page with a list of issues templates, and there you can choose the `Bug report` template.
+You will be redirected to another page with a list of issues templates, and there you can choose the `Bug report` [template](.github/ISSUE_TEMPLATE/bug_report.md).
 
-For the title of the bug, please give something short that best describes your problem.
+For the title of the bug issue, please give something short that best describes your problem.
 On the bug report content pane, a list of headings will show the expected information.
 Please make sure to add as many details as you can. 
 Steps to reproduce, console log errors, screenshots and browser type and version are particularly helpful to resolve the issue faster.
 
-You can preview the bug issue template [here](.github/ISSUE_TEMPLATE/bug_report.md).
-
-If you simply have a question and Zana, please do not raise a new bug issue for it, instead check our 
+If you simply have a question for Zana, please do not raise a new bug issue for it, instead check our 
 [questions and discussions](#questions-and-discussions) section.
 
-## Suggesting Enhancements
+## Suggesting enhancements
 
+If you want to suggest a new feature or improvement to Zana, you can follow this guide.
+Before creating a new enhancement issue however, please check the [issues](https://github.com/kushtrimh/zana/issues) page in case
+a similar enhancement has already been suggested.
 
+To create an enhancement issue, you can go to the [issues](https://github.com/kushtrimh/zana/issues) page and click on the `New issue` button.
+You will be redirected to another page with a list of issues templates, and there you can choose the `Feature request` [template](.github/ISSUE_TEMPLATE/feature_request.md).
 
+For the title of the enhancement issue, please give something short that best describes your suggestion.
+On the enhancement issue content pane, a list of headings will show the expected information.
+Please make sure to add as many details as you can.
 
+## Local setup and development
 
+Zana is built as a monorepo, and it uses different tools for API clients, the browser extension, deployment, packaging and release handling.
+Modules are organized as follows:
 
+- `services` - Rust crates that contain the API clients and the AWS Lambda function binary that serves the data retrieved by the clients.
+- `extension` - Browser extension that is built using WebExtensions API.
+- `deployment` - AWS CDK project that contains the infrastructure.
+- `release` - Rust binary crate that helps with release management.
+- `tools` - Scripts that help with extension local development and packaging for certain platforms.
 
-
-
-
-
-
-
+Zana is built primarily for Firefox, but it uses browser polyfills to support Chrome and Edge.
+The _Firefox_ extension is built using *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.
+The whole extension package will be migrated and adapted to *Manifest v3* in the near future.
 
 ### Required tools
 
-- [Rust 1.68.0](https://www.rust-lang.org/) (`services`, `release`)
-- [Cargo Lambda 0.17.1](https://www.cargo-lambda.info/) (`services`)
-- [Node.js v18.14.2](https://nodejs.org/en) (`extension`, `deployment`)
-- [Web-ext 7.6.1](https://github.com/mozilla/web-ext) (`extension`)
-- [AWS CLI 2.10.3](https://aws.amazon.com/cli/) (`deployment`)
-- [AWS CDK + AWS CDK CLI 2.67.0](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) (`deployment`)
-- [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) (`deployment`)
+- [Rust](https://www.rust-lang.org/) 1.68.0 (`services`, `release`)
+- [Cargo Lambda](https://www.cargo-lambda.info/) 0.17.1 (`services`)
+- [Node.js](https://nodejs.org/en) v18.14.2 (`extension`, `deployment`)
+- [Web-ext](https://github.com/mozilla/web-ext) 7.6.1 (`extension`)
+- [AWS CLI](https://aws.amazon.com/cli/) 2.10.3 (`deployment`)
+- [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) 2.67.0 (`deployment`)
+- [Java](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) 17 (`deployment`)
+- [Maven](https://maven.apache.org/) 3.8.1>= (`deployment`)
+- WSL, Git Bash or anything similar (`tools`)
+
+You can not need all those tools, if you please on building/testing only certain parts of the application.
+This guide does not show you how to install those tools, but you can find that information on their official documentation.
 
 ### Services
 
-The services are Rust crates (libraries and binaries) that make the clients that talk to third-party APIs, and the AWS Lambda function
+Services are Rust crates (libraries and binaries) that provide the clients that talk to third-party APIs, and the AWS Lambda function binary
 that serves the data retrieved from the clients in a generic format.
 
-#### Zana service
+#### Zana Service
 
 The `zana` service is a Rust crate that provides functionality to retrieve book information from third-party APIs.
-It does so by providing a generic clients for each third-party API, and a generic data model that is used to represent the data retrieved from the APIs.
-Even though currently it is used only by `zana_lambda`, it is built as a separate library crate so that it can be used easily later on in other Rust binary crates
-built for other cloud providers or as a generic HTTP service.
+It does so by providing a generic client for each third-party API, and a generic data model that is used to represent the data retrieved from the APIs.
+Even though currently it is used only by `zana_lambda`, it is built as a separate library crate so that it can be used 
+easily later on in other Rust binary crates built for other cloud providers or as a generic HTTP service.
 
-You can build `zana` service by running the following command in the `services/zana` directory
+
+You can build `zana` service by running the following commands in `services/zana` directory:
 
 ```bash
 cargo build
@@ -96,20 +113,30 @@ cargo test
 
 #### Zana Lambda
 
-`zana_lambda` is a Rust binary crate that contains the AWS Lambda function that serves the data retrieved from third-party APIs.
-It uses the `zana` library crate to make clients for each supported third-party API.
+`zana_lambda` is a Rust binary crate that contains the AWS Lambda function binary that serves the data retrieved from third-party APIs.
+It uses the `zana` library crate to create clients for each supported third-party API.
 
 ##### Environment variables
 
 ###### Required
 
-- `ZANA_ENV`, environment that is used on AWS Parameter Store queries as part of the key, to provide support for same parameters on multiple environments.
+- `ZANA_ENV`, environment that is used to specify the environment for the application. Used also by AWS Parameter Store queries as part of the key, to provide support for same parameters on multiple environments.
 
-###### Set automatically AWS Lambda runtime
+###### Set automatically by the AWS Lambda Runtime
+
+The following environment variables are set by the AWS Lambda Runtime once the binary is deployed on AWS.
+They are *not required* for local development and testing.
+
 - `AWS_SESSION_TOKEN`, token used to access AWS Parameter Store.
 - `PARAMETERS_SECRETS_EXTENSION_HTTP_PORT`, [port to be used by the AWS Parameter Store lambda extension](https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_lambda.html#retrieving-secrets_lambda_env-var).
 
 ###### Optional
+
+The following environment variables are available to primarily support during local development.
+As of right now, no support is added to test `zana_lambda` locally together with AWS Parameter Store.
+For this reason, those environment variables once set, will disable the calls made to AWS Parameter Store.
+
+All the values for the environment variables below can be retrieved from the supported third-party API websites.
 
 - `ZANA_GOOGLE_BOOKS_URL`, use if you do not want to fetch the URL from AWS Parameter Store.
 - `ZANA_GOOGLE_BOOKS_KEY`, use if you do not want to fetch the API key from AWS Parameter Store.
@@ -118,19 +145,23 @@ It uses the `zana` library crate to make clients for each supported third-party 
 ##### AWS Parameter Store support
 
 [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) is used
-to retrieve parameters required to initialize clients for different third-party APIs, if those parameters are not provided as
+to retrieve parameters required to initialize clients for the supported third-party APIs, *if* those parameters are not provided as
 environment variables.
 
-`zana_lambda` uses the following parameter names to query parameter from the AWS Parameter Store. `prod` represents the environment, and it should change
-based on the environment that is used.
+`zana_lambda` uses the following parameter names to query parameter from the AWS Parameter Store. 
+`prod` here is selected as the default value, and it represents the environment.
+
 - `/zana/prod/google-books-url`
 - `/zana/prod/google-books-key`
 - `/zana/prod/openlibrary-url`
 
-Value of the environment variable `ZANA_ENV` is used as part of the key when retrieving parameter values,
+The value of the environment variable `ZANA_ENV` is used as part of the key when retrieving parameter values,
 in order to provide support for multiple environments at the same time.
 
-##### Adding to AWS Parameter Store for production
+##### Adding parameters to AWS Parameter Store for production
+
+Parameters need to be added manually via the AWS CLI.
+You can add the parameters using the following commands:
 
 ```sh
 aws ssm put-parameter --name "/zana/prod/google-books-url" --value "VALUE-HERE" --type String
@@ -138,9 +169,9 @@ aws ssm put-parameter --name "/zana/prod/google-books-key" --value "VALUE-HERE" 
 aws ssm put-parameter --name "/zana/prod/openlibrary-url" --value "VALUE-HERE" --type String
 ```
 
-##### Running locally
+##### Zana Lambda on local
 
-The easiest way to test `zana_lambda` locally, is with [cargo lambda](https://www.cargo-lambda.info/guide/getting-started.html).
+The easiest way to run and test `zana_lambda` locally, is with [cargo lambda](https://www.cargo-lambda.info/guide/getting-started.html).
 
 Once `cargo lambda` is installed, you need to create a `.env` file in the `services/zana_lambda` directory.
 This file should contain the following variables when running locally
@@ -154,18 +185,26 @@ ZANA_GOOGLE_BOOKS_KEY=<YOUR-GOOGLE-BOOKS-KEY>
 ZANA_OPENLIBRARY_URL=https://openlibrary.org
 ```
 
-`AWS_SESSION_TOKEN` and `PARAMETERS_SECRETS_EXTENSION_HTTP_PORT` are variables which are provided by the Lambda Runtime
-on other environment, and they're required to communicate with _AWS Parameter Store_.
-Since the _Parameter Store_ is not used when testing locally, those 2 environment variables do not have any function on local environment.
+`AWS_SESSION_TOKEN` and `PARAMETERS_SECRETS_EXTENSION_HTTP_PORT` are variables which are provided by the AWS Lambda Runtime
+once the application is deployed on AWS, and they're used to communicate with AWS Parameter Store.
+Since the AWS Parameter Store is not used when testing locally, those 2 environment variables are *not required* on your local environment.
 
-Additional environment variables (not required on other envs) are added to replace values that would be fetched from the _Parameter Store_.
-`ZANA_GOOGLE_BOOKS_URL`, `ZANA_GOOGLE_BOOKS_KEY` and `ZANA_OPENLIBRARY_URL` are meant as a replacement for _Parameter Store_ values when running locally.
+Additional environment variables (not required on other live envs) are added to replace values that would be fetched from the AWS Parameter Store.
+`ZANA_GOOGLE_BOOKS_URL`, `ZANA_GOOGLE_BOOKS_KEY` and `ZANA_OPENLIBRARY_URL` are meant as a replacement for AWS Parameter Store values when running locally.
 
-Those can be utilized on other environments as well, if you do not want to use _Parameter Store_ to fetch those values.
+Those can be utilized on other environments as well, if you do not want to use AWS Parameter Store.
 
-##### Starting the lambda locally
+##### Building a release artifact for Zana Lambda
 
-To start the lambda locally, change your directory to `services/zana_lambda` and run
+To build a release artifact for Zana Lambda, run the following command in `services/zana_lambda` directory:
+
+```sh
+cargo lambda build --release --output-format zip
+```
+
+##### Starting Zana Lambda locally
+
+To start `zana_lambda` locally, run the following commands in `services/zana_lambda` directory:
 ```sh
 cargo build
 ```
@@ -176,9 +215,9 @@ cargo lambda watch --env-file .env
 ```
 where `.env` is the file containing the environment variables mentioned above.
 
-##### Query using any HTTP client
+##### Query using any HTTP Client
 
-The lambda should start on port `9000` by default.
+`zana_lambda` should start on port `9000` by default.
 
 _Request for OpenLibrary_
 ```
@@ -190,6 +229,12 @@ _Request for Google Books_
 GET http://localhost:9000/lambda-url/zana_lambda?type=googlebooks&isbn=9781591026419
 ```
 
+To run unit tests for `zana_lambda`, run the following command in `services/zana_lambda` directory:
+
+```sh
+cargo test
+```
+
 ### Deployment
 
 AWS CDK with _Java_ is used to define the infrastructure, which is primarily built around serverless services provided by AWS.
@@ -197,35 +242,135 @@ The deployment is done automatically once a PR is merged into the `main` branch,
 
 ![Zana AWS Architecture](./docs/zana_aws.drawio.png)
 
-#### Useful commands
+#### Building and testing deployment changes
 
-Change your directory to `deployment/zana_aws` to run the following commands
+To check if the deployment changes are valid, run the following command in `deployment/zana_aws` directory:
+```sh
+cdk ls
+```
+and to synthesize the CloudFormation template run
+```sh
+cdk synth
+```
 
-* `mvn package`     compile and run tests
-* `cdk ls`          list all stacks in the app
-* `cdk synth`       emits the synthesized CloudFormation template
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk docs`        open CDK documentation
+`cdk deploy` is used to provision all the required resources and deploy Zana on AWS. This step
+is done automatically once a PR is merged into the `main` branch.
 
-#### What is required before the deployment
+To run the unit tests:
+```sh
+mvn clean test
+```
 
-- To have a hosted zone in `Route 53`
-- Certificate for *.yourdomain.com in us-east-1, and to create records for it in `Route 53`
-- Parameters set into `AWS Parameter Store`
+#### Deploying Zana yourself
+  
+If you're interested in deploying Zana yourself, there are a few requirements before the deployment can be done.
 
-#### Required parameters on Parameter store
+- To have a hosted zone in _Route 53_.
+- Certificate for *.yourdomain.com in _us-east-1_, and to create records for it in _Route 53_.
+- Configuration parameters set into _AWS Parameter Store_
 
-`prod` is used by default if not environment is specified.
+Changes may be added in the future, which may change the requirements for the deployment.
+(E.g. no requirement for a hosted zone in case someone wants to deploy Zana just temporarily).
 
+#### Required Configuration Parameters on AWS Parameter Store
+
+`prod` is used by default if no environment is specified.
+
+##### Parameters Used By Services
 - `/zana/prod/google-books-url` - type: `String`, URL for Google Books API
 - `/zana/prod/google-books-key` - type: `SecureString`, API Key for Google Books API
 - `/zana/prod/openlibrary-url` - type: `String`, URL for OpenLibrary API
 
+##### Parameters Used During Resource Provisioning and Deployment
 - `/zana/prod/certificate-arn` - type: `String`, Certificate ARN from AWS Certificate Manager
 - `/zana/prod/api-host` - type: `String`, API host name to be used by zana
-- `/zana/prod/hosted-zone-id` - type: `String`, Route53 Hosted zone ID
-- `/zana/prod/hosted-zone-name` - type: `String`, Route54 Hosted zone name
+- `/zana/prod/hosted-zone-id` - type: `String`, Route 53 Hosted zone ID
+- `/zana/prod/hosted-zone-name` - type: `String`, Route 53 Hosted zone name
 - `/zana/prod/cors-allow-origins` - type: `String`, Comma seperated string of allowed origins
 - `/zana/prod/lambda-ssm-extension-arn` - type: `String`, ARN for Lambda SSM extension
 - `/zana/prod/lambda-insights-extension-arn` - type: `String`, ARN for Lambda Insights extension
+
+Please make sure that you provide the correct extension ARNs for the SSM and Lambda Insights extensions.
+They change based on the region that you're going to deploy. Check the following pages for more information:
+- [AWS Systems Manager Parameter Store and AWS Secrets Manager Extension](https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-integration-lambda-extensions.html#intel)
+- [Lambda Insights Extension](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsx86-64.html)
+
+### Extension
+
+All the extension related resources are in the `extension/addon` directory.
+The `addon` directory represents the extension as it is built for Firefox.
+The `manifest.json` file in the `addon` directory, it is the one used when distributing the extension to Firefox.
+
+Manifest files for other browsers are in the `extension/platform` directory.
+
+This allows for easier testing and development in Firefox, using `web-ext`, while testing for Chrome
+and other browsers will require a few more manual steps.
+
+#### Running unit tests
+
+To run the unit tests for the extension, run the following command in the `extension` directory.
+
+```sh
+npm test
+```
+
+#### Local development and testing on Firefox
+
+To build and test the extension locally on Firefox, run the following command in the `extension/addon` directory.
+
+```sh
+web-ext run --devtools
+```
+
+This will open a new Firefox instance, in which the extension will be already loaded.
+You can proceed to test the extension change via that browser instance.
+All the logs can be seen in the additional _dev tools_ tab that is opened with the new Firefox instance.
+
+#### Building a release archive for Firefox
+
+In order to build a release archive for Firefox, run the following command in `extension/addon` directory:
+
+```sh
+web-ext build
+```
+
+This will create a new `web-ext-artifacts` directory under the `addon` directory, which will contain
+the built zip archive.
+
+#### Local development and testing on Chrome
+
+The extension is set to use _Manifest v3_.
+
+To test your changes on Chrome, first open a new Chrome instance and go at `chrome://extensions`.
+If you haven't already enabled `Developer mode`, make sure to enable it by turning on the toggle at the top right-hand side.
+
+To build the project for Chrome, execute the `chrome_build.sh` script from the root directory.
+
+```sh
+bash ./tools/chrome_build.sh
+```
+
+This will create a new directory `dist.chrome.mv3.build` in the root directory of the application.
+
+From the `chrome://extensions` tab, click on the `Load unpacked` button and then select the `dist.chrome.mv3.build` directory.
+This will load the extension on Chrome and you can proceed with testing your changes.
+
+The tools script that builds the extension for Chrome needs to be executed after each change.
+After the rebuild, click the reload icon for `zana` extension in `chrome://extensions` tab.
+
+#### Local development and testing on Edge
+
+Local development and testing for Edge follows the same steps as the guide for local development and testing on Chrome.
+The only change would be the appearance of `edge://extensions/`, which is used for Edge.
+
+#### Building a release archive for Chrome or Edge
+
+In order to build a release zip archive for Chrome or Edge, run the following command from the root directory.
+
+```sh
+bash ./tools/chrome_build.sh --release
+```
+
+The result will be a new directory `dist.chrome.mv3.release` that will contain the zip archive.
+
+## Style guides
