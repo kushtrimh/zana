@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "zana",
   "description": "'Quality of life' extension for websites that sell books.",
   "version": "0.1.0",
@@ -7,15 +7,15 @@
     "64": "icons/icon.png"
   },
   "permissions": [
-    "webRequest",
+    "webRequest"
+  ],
+  "host_permissions": [
     "https://dukagjinibooks.com/api/products/*",
     "https://www.dukagjinibooks.com/api/products/*",
     "https://api.zanareads.com/*"
   ],
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
@@ -33,10 +33,17 @@
     }
   ],
   "web_accessible_resources": [
-    "images/powered_by_googlebooks.png",
-    "images/powered_by_openlibrary.svg",
-    "images/dukagjini/external_link.svg",
-    "images/dukagjini/loading.gif",
-    "css/dukagjinibooks.css"
+    {
+      "resources": [
+        "images/powered_by_googlebooks.png",
+        "images/powered_by_openlibrary.svg",
+        "images/dukagjini/external_link.svg",
+        "images/dukagjini/loading.gif",
+        "css/dukagjinibooks.css"
+      ],
+      "matches": [
+          "*://*.dukagjinibooks.com/*"
+      ]
+    }
   ]
 }

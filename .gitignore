@@ -210,3 +210,8 @@ cdk.out
 # Custom
 
 .idea/
+
+web-ext-artifacts/
+
+dist.chrome.mv3.build/
+dist.chrome.mv3.release/
