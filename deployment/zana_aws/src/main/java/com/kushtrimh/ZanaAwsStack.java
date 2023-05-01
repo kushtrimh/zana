@@ -60,7 +60,7 @@ public class ZanaAwsStack extends Stack {
     public ZanaAwsStack(final Construct scope, final String id, final StackProps props, final String zanaEnv) {
         super(scope, id, props);
 
-        // Cors configuration
+        // Retrieve CORS configuration, which allows only certain origins to access the API
         var corsAllowedOrigins = Arrays.stream(StringParameter.valueForStringParameter(this,
                                 String.format("/zana/%s/cors-allow-origins", zanaEnv))
                         .split(","))

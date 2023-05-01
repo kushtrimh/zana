@@ -1,21 +1,30 @@
 if (typeof browser === 'undefined') {
+    // In case the browser API is not available, switch to Chrome API.
     browser = chrome;
 }
 
 const apiUrl = 'https://api.zanareads.com/books';
 
 const host = window.location.host;
+
+// List of supported hosts.
 const hostsConfig = {
     'dukagjinibooks.com': dukagjiniBooks,
 };
 
 const hostConfig = hostsConfig[host];
+
+// Initialize the host configuration.
+// This should define any needed function, and add any needed event listener.
 hostConfig.init();
 
 browser.runtime.onMessage.addListener(() => {
+    // In case when an SPA is used, each valid XHR request that is intercept by the background script will trigger an
+    // update, causing the data to be retrieved again for a different book.
     update();
 });
 
+// Once the page is loaded, update the page with the book data.
 update();
 
 function update() {
@@ -30,11 +39,14 @@ function update() {
 }
 
 function notify(isbn) {
+    // Display a loading indicator, as it was defined in the host configuration.
     hostConfig.loading();
 
     const responsePromises = retrieveBookData(isbn);
     Promise.all(responsePromises)
         .then(responses => {
+            // Dispatch a custom event to the host module listeners, which will handle the response
+            // and display the needed HTML elements.
             const event = new CustomEvent(hostConfig.eventName, {
                 detail: {
                     responses: responses,
