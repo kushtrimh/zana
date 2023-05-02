@@ -1,10 +1,12 @@
 {
   "name": "release",
-  "version": "0.1.0",
+  "version": "0.4.1",
   "description": "Release management for Zana",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "release:patch": "node index.js patch",
+    "release:minor": "node index.js minor"
   },
   "author": "Kushtrim Hajrizi",
   "license": "Apache-2.0",
