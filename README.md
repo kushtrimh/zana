@@ -51,8 +51,9 @@ Modules are organized as follows:
 - `services` - Rust crates that contain the API clients and the AWS Lambda function binary that serves the data retrieved by the clients.
 - `extension` - Browser extension that is built using WebExtensions API.
 - `deployment` - AWS CDK project that contains the infrastructure.
-- `release` - Rust binary crate that helps with release management.
-- `tools` - Scripts that help with extension local development and packaging for certain platforms.
+- `tools` - Scripts and binaries that help with:
+  - Extension local development and packaging for certain platforms.
+  - Release management.
 
 Zana is built primarily for Firefox, but it uses browser polyfills to support Chrome and Edge.
 The _Firefox_ extension is built with *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.

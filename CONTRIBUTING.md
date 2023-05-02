@@ -67,8 +67,9 @@ Modules are organized as follows:
 - `services` - Rust crates that contain the API clients and the AWS Lambda function binary that serves the data retrieved by the clients.
 - `extension` - Browser extension that is built using WebExtensions API.
 - `deployment` - AWS CDK project that contains the infrastructure.
-- `release` - Rust binary crate that helps with release management.
-- `tools` - Scripts that help with extension local development and packaging for certain platforms.
+- `tools` - Scripts and binaries that help with:
+  - Extension local development and packaging for certain platforms.
+  - Release management.
 
 Zana is built primarily for Firefox, but it uses browser polyfills to support Chrome and Edge.
 The _Firefox_ extension is built using *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.
@@ -76,9 +77,9 @@ The whole extension package will be migrated and adapted to *Manifest v3* in the
 
 ### Required tools
 
-- [Rust](https://www.rust-lang.org/) >=1.68.0 (`services`, `release`)
+- [Rust](https://www.rust-lang.org/) >=1.68.0 (`services`)
 - [Cargo Lambda](https://www.cargo-lambda.info/) >=0.17.1 (`services`)
-- [Node.js](https://nodejs.org/en) >=v18.14.2 (`extension`, `deployment`)
+- [Node.js](https://nodejs.org/en) >=v18.14.2 (`extension`, `deployment`, `tools`)
 - [Web-ext](https://github.com/mozilla/web-ext) >=7.6.1 (`extension`)
 - [AWS CLI](https://aws.amazon.com/cli/) >=2.10.3 (`deployment`)
 - [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) >=2.67.0 (`deployment`)
@@ -348,7 +349,7 @@ If you haven't already enabled `Developer mode`, make sure to enable it by turni
 To build the project for Chrome, execute the `chrome_build.sh` script from the root directory.
 
 ```sh
-bash ./tools/chrome_build.sh
+bash ./tools/extension/chrome_build.sh
 ```
 
 This will create a new directory `dist.chrome.mv3.build` in the root directory of the application.
@@ -369,7 +370,7 @@ The only change would be the appearance of `edge://extensions`, which is where y
 In order to build a release zip archive for Chrome or Edge, run the following command from the root directory:
 
 ```sh
-bash ./tools/chrome_build.sh --release
+bash ./tools/extension/chrome_build.sh --release
 ```
 
 The result will be a new directory `dist.chrome.mv3.release` that will contain the release zip archive.
