@@ -10,9 +10,9 @@ The data is retrieved from a list of third-party book APIs.
 
 You can install the extension from the following stores:
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/zanareads/)
-- [Chrome and Edge](https://chrome.google.com/webstore/detail/zana/dfjgjgjgjgjgjgjgjgjgjgjgjgjgjgj)
+- [Chrome and Edge](https://chrome.google.com/webstore/detail/zana/gpabeacabfcdnclngneckekecoiieodd)
 
-The extension is not yet on _Microsoft Edge Add-ons_ store, but you can install it from the _Chrome Web Store_.
+The extension is not yet on _Microsoft Edge Add-ons_ store, but you can install it on _Edge_ from the _Chrome Web Store_.
 
 ## Third-party APIs
 
