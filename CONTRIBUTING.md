@@ -383,15 +383,21 @@ The result will be a new directory `dist.chrome.mv3.release` that will contain t
 - Start the commit messages with the following words:
   - `doc: ` - when making documentation or license changes
   - `cicd: ` - when changing any of the GitHub Actions workflows
-  - `fix: ` or `fix(module-name): ` - when fixing a bug
-  - `feat` or `feat(module-name): ` - when adding new features
-  - `refactor: ` or `refactor(module-name): ` - when making changes to existing features
-  - `format: ` or `format(module-name): ` - when making formatting changes or improvements
+  - `fix: ` - when fixing a bug
+  - `feat: ` - when adding new features
+  - `refactor: ` - when making changes to existing features
+  - `format: ` - when making formatting changes or improvements
 
 Examples:
   - `doc: add section for chrome release on contributing page`
   - `cicd: add steps to build and test zana_lambda`
-  - `feat(services): add new client for xyz API`
+  - `feat: add new client for xyz API`
+
+You may see older commits that include the module as well in the commit message. (_e.g. `feat(services): add new client for xyz API`_)
+Those types of commit messages should *not* be used anymore, and they're not supported by the CICD pipeline.
+
+Please check the [Pull Requests](#pull-requests) guide as well, 
+to get more information about how the commit messages affect the CICD pipeline.
 
 ### Services style guides
 
@@ -443,6 +449,8 @@ When creating a pull request please follow the following steps:
 Once a PR is approved, it can be merged and right after that it should automatically be deployed.
 Changes made to the `extension` will be packaged and distributed to browser addon stores manually by the owner
 after the PR is merged.
+
+TODO: //Add merge commit message
 
 ## Adding support for a new bookstore
 
