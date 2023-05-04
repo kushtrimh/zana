@@ -69,3 +69,6 @@ jobs:
       - name: Run tests in zana extension
         working-directory: extension/
         run: npm install && npm test
+      - name: Run tests in release tool
+        working-directory: tools/release/
+        run: npm install && npm test
