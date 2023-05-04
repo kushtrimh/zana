@@ -65,6 +65,7 @@ function updateMavenProject(newVersion, filename) {
 
     const builder = new XMLBuilder({
         format: true,
+        indentBy: '    '
     });
     const updatedContent = builder.build(content);
     fs.writeFileSync(filename, updatedContent, 'utf8');
