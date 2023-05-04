@@ -3,6 +3,6 @@ module.exports = {
     setupFiles: ['./tests/dukagjinibooks/__mocks__/setup.js'],
     rootDir: '../../',
     testMatch: [
-        "<rootDir>/tests/dukagjinibooks/**/*.test.{js,jsx}",
+        '<rootDir>/tests/dukagjinibooks/**/*.test.{js,jsx}',
     ],
 }

@@ -5,7 +5,7 @@ if (typeof browser === 'undefined') {
 
 // List of URLs to be intercepted
 let targets = [
-    "https://dukagjinibooks.com/api/products/*"
+    'https://dukagjinibooks.com/api/products/*'
 ];
 
 // List of hosts that are supported.

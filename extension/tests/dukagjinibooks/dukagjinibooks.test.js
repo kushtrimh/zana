@@ -11,36 +11,36 @@ const html = fs.readFileSync('./tests/dukagjinibooks/dom.html', 'utf8').toString
 function createDefaultSuccessResponses() {
     return [
         {
-            "isbn": "9780261102385",
-            "body": {
-                "data": {
-                    "page_count": 1567,
-                    "description": "Description 1",
-                    "provider_link": "http://localhost/link/1"
+            'isbn': '9780261102385',
+            'body': {
+                'data': {
+                    'page_count': 1567,
+                    'description': 'Description 1',
+                    'provider_link': 'http://localhost/link/1'
                 },
-                "rating": {
-                    "average_rating": 4.5,
-                    "ratings_count": 147
+                'rating': {
+                    'average_rating': 4.5,
+                    'ratings_count': 147
                 }
             },
-            "status": 200,
-            "type": "googlebooks"
+            'status': 200,
+            'type': 'googlebooks'
         },
         {
-            "isbn": "9780261102385",
-            "body": {
-                "data": {
-                    "page_count": 123,
-                    "description": "Description 2",
-                    "provider_link": "http://localhost/link/2"
+            'isbn': '9780261102385',
+            'body': {
+                'data': {
+                    'page_count': 123,
+                    'description': 'Description 2',
+                    'provider_link': 'http://localhost/link/2'
                 },
-                "rating": {
-                    "average_rating": 4.515625,
-                    "ratings_count": 64
+                'rating': {
+                    'average_rating': 4.515625,
+                    'ratings_count': 64
                 }
             },
-            "status": 200,
-            "type": "openlibrary"
+            'status': 200,
+            'type': 'openlibrary'
         }
     ];
 }
