@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const TOML = require('@iarna/toml');
 const {XMLParser, XMLBuilder} = require("fast-xml-parser");
 
 const { execSync } = require('child_process');
@@ -48,15 +47,13 @@ function updateNPMProject(newVersion, filename) {
 
 function updateRustCrate(newVersion, filename) {
     let content = fs.readFileSync(filename, 'utf8');
-    content = TOML.parse(content);
-    content.package.version = newVersion;
-    const updatedContent = TOML.stringify(content);
+    const updatedContent = content.replace(/version = "(.*)"/, `version = "${newVersion}"`);
     fs.writeFileSync(filename, updatedContent, 'utf8');
 
     const absolutePath = path.resolve(filename);
     const directory = path.dirname(absolutePath);
     process.chdir(directory);
-    execSync('cargo update');
+    execSync('cargo update -p zana');
     process.chdir(__dirname);
 }
 
@@ -66,7 +63,9 @@ function updateMavenProject(newVersion, filename) {
     content = parser.parse(content);
     content.project.version = newVersion;
 
-    const builder = new XMLBuilder();
+    const builder = new XMLBuilder({
+        format: true,
+    });
     const updatedContent = builder.build(content);
     fs.writeFileSync(filename, updatedContent, 'utf8');
 }
