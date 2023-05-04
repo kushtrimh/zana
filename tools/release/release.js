@@ -59,13 +59,18 @@ function updateRustCrate(newVersion, filename) {
 
 function updateMavenProject(newVersion, filename) {
     let content = fs.readFileSync(filename, 'utf8');
-    const parser = new XMLParser();
+    const parser = new XMLParser({
+        ignoreAttributes: false,
+        commentPropName: '#comment',
+    });
     content = parser.parse(content);
     content.project.version = newVersion;
 
     const builder = new XMLBuilder({
         format: true,
-        indentBy: '    '
+        indentBy: '    ',
+        ignoreAttributes: false,
+        commentPropName: '#comment',
     });
     const updatedContent = builder.build(content);
     fs.writeFileSync(filename, updatedContent, 'utf8');
