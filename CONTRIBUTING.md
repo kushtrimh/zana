@@ -446,11 +446,24 @@ When creating a pull request please follow the following steps:
 - Ensure all the status checks have passed
 - Make sure the code follows the [style guides](#style-guides)
 
-Once a PR is approved, it can be merged and right after that it should automatically be deployed.
-Changes made to the `extension` will be packaged and distributed to browser addon stores manually by the owner
-after the PR is merged.
+Once a PR is approved, it can be merged.
+While merging the PR, change the merge commit message based on the changes that are being merged.
 
-TODO: //Add merge commit message
+- If you're merging a PR that fixes a bug, use `fix: ` as the prefix for the merge commit message.
+- If you're merging a PR that adds a new feature, use `feat: ` as the prefix for the merge commit message.
+- If you're merging a PR that fixes formatting issues, use `format: ` as the prefix for the merge commit message.
+- If you're merging a PR that adds or updates documentation, use `doc: ` as the prefix for the merge commit message.
+
+Once a PR is merged, the `release` workflow will be triggered, creating a new release and updating the version of the project.
+The version will change based on the commit message prefix.
+
+For new features, the minor version is incremented. (_e.g. `0.1.0` -> `0.2.0`_),
+while for bug fixes and other changes the patch version is incremented (_e.g. `0.1.1` -> `0.1.2`_).
+
+Documentation and formatting changes do not trigger a new version update and release.
+
+All the services are deployed automatically once a PR is merged, however changes made to the `extension` will be packaged
+and distributed to browser addon stores manually by the owner.
 
 ## Adding support for a new bookstore
 
