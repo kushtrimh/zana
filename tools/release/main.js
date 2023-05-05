@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { updateProjects, updateNPMVersion, PROJECT_TYPE } = require('./release');
 const packageJson = require("./package.json");
 
