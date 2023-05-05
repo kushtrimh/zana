@@ -25,7 +25,7 @@ jobs:
       # Read version from version file
       - name: Read version
         id: read_version
-        run: echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
       # Create and push new tag
       - name: Create tag
         uses: actions/github-script@v6
@@ -33,7 +33,7 @@ jobs:
           script: |
             const version = '${{ steps.read_version.outputs.version }}';
             const tag = `v${version}`;
-            github.git.createRef({
+            github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `refs/tags/${tag}`,
@@ -49,11 +49,11 @@ jobs:
       - if: ${{ startsWith(github.event.head_commit.message, 'feat:') }}
         name: Update minor version
         working-directory: tools/release
-        run: npm run release:minor
+        run: npm install && npm run release:minor
       - if: ${{ !startsWith(github.event.head_commit.message, 'feat:') }}
         name: Update patch version
         working-directory: tools/release
-        run: npm run release:patch
+        run: npm install && npm run release:patch
       # Commit the changes
       - name: Commit version changes
         run: |
