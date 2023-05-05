@@ -42,6 +42,9 @@ if (releaseType === 'minor') {
     newVersion = `${major}.${minor}.${parseInt(patch) + 1}`;
 }
 
+// Update the version file
+fs.writeFileSync('../../VERSION', newVersion, 'utf8');
+
 // Update the version for the release package
 updateNPMVersion(newVersion);
 

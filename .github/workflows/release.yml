@@ -1,0 +1,35 @@
+name: release
+
+on:
+  workflow_run:
+    workflows: [ "build" ]
+    branches: [ "main" ]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && !startsWith(github.event.head_commit.message, 'doc:') && !startsWith(github.event.head_commit.message, 'format:}}
+    runs-on: ubuntu-latest
+    steps:
+      # Setup Rust and NodeJS
+      - uses: actions/checkout@v3
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Node.js toolchain
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      # Read version from version file
+      # Create and push new tag
+      # Create new release
+
+      - if: ${{ startsWith(github.event.head_commit.message, 'feat:') }}
+        working-directory: tools/release
+        run: npm run release:minor
+      - if: ${{ !startsWith(github.event.head_commit.message, 'feat:') }}
+        working-directory: tools/release
+        run: npm run release:patch
+
+      # Commit the changes
+      # TODO: add new file to the project that holds the current version
