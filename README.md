@@ -10,9 +10,9 @@ The data is retrieved from a list of third-party book APIs.
 
 You can install the extension from the following stores:
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/zanareads/)
-- [Chrome and Edge](https://chrome.google.com/webstore/detail/zana/dfjgjgjgjgjgjgjgjgjgjgjgjgjgjgj)
+- [Chrome and Edge](https://chrome.google.com/webstore/detail/zana/gpabeacabfcdnclngneckekecoiieodd)
 
-The extension is not yet on _Microsoft Edge Add-ons_ store, but you can install it from the _Chrome Web Store_.
+The extension is not yet on _Microsoft Edge Add-ons_ store, but you can install it on _Edge_ from the _Chrome Web Store_.
 
 ## Third-party APIs
 
@@ -51,8 +51,9 @@ Modules are organized as follows:
 - `services` - Rust crates that contain the API clients and the AWS Lambda function binary that serves the data retrieved by the clients.
 - `extension` - Browser extension that is built using WebExtensions API.
 - `deployment` - AWS CDK project that contains the infrastructure.
-- `release` - Rust binary crate that helps with release management.
-- `tools` - Scripts that help with extension local development and packaging for certain platforms.
+- `tools` - Scripts and binaries that help with:
+  - Extension local development and packaging for certain platforms.
+  - Release management.
 
 Zana is built primarily for Firefox, but it uses browser polyfills to support Chrome and Edge.
 The _Firefox_ extension is built with *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.

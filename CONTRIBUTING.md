@@ -67,8 +67,9 @@ Modules are organized as follows:
 - `services` - Rust crates that contain the API clients and the AWS Lambda function binary that serves the data retrieved by the clients.
 - `extension` - Browser extension that is built using WebExtensions API.
 - `deployment` - AWS CDK project that contains the infrastructure.
-- `release` - Rust binary crate that helps with release management.
-- `tools` - Scripts that help with extension local development and packaging for certain platforms.
+- `tools` - Scripts and binaries that help with:
+  - Extension local development and packaging for certain platforms.
+  - Release management.
 
 Zana is built primarily for Firefox, but it uses browser polyfills to support Chrome and Edge.
 The _Firefox_ extension is built using *Manifest v2*, and the _Chrome_ extension with *Manifest v3*.
@@ -76,9 +77,9 @@ The whole extension package will be migrated and adapted to *Manifest v3* in the
 
 ### Required tools
 
-- [Rust](https://www.rust-lang.org/) >=1.68.0 (`services`, `release`)
+- [Rust](https://www.rust-lang.org/) >=1.68.0 (`services`)
 - [Cargo Lambda](https://www.cargo-lambda.info/) >=0.17.1 (`services`)
-- [Node.js](https://nodejs.org/en) >=v18.14.2 (`extension`, `deployment`)
+- [Node.js](https://nodejs.org/en) >=v18.14.2 (`extension`, `deployment`, `tools`)
 - [Web-ext](https://github.com/mozilla/web-ext) >=7.6.1 (`extension`)
 - [AWS CLI](https://aws.amazon.com/cli/) >=2.10.3 (`deployment`)
 - [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) >=2.67.0 (`deployment`)
@@ -348,7 +349,7 @@ If you haven't already enabled `Developer mode`, make sure to enable it by turni
 To build the project for Chrome, execute the `chrome_build.sh` script from the root directory.
 
 ```sh
-bash ./tools/chrome_build.sh
+bash ./tools/extension/chrome_build.sh
 ```
 
 This will create a new directory `dist.chrome.mv3.build` in the root directory of the application.
@@ -369,7 +370,7 @@ The only change would be the appearance of `edge://extensions`, which is where y
 In order to build a release zip archive for Chrome or Edge, run the following command from the root directory:
 
 ```sh
-bash ./tools/chrome_build.sh --release
+bash ./tools/extension/chrome_build.sh --release
 ```
 
 The result will be a new directory `dist.chrome.mv3.release` that will contain the release zip archive.
@@ -382,15 +383,21 @@ The result will be a new directory `dist.chrome.mv3.release` that will contain t
 - Start the commit messages with the following words:
   - `doc: ` - when making documentation or license changes
   - `cicd: ` - when changing any of the GitHub Actions workflows
-  - `fix: ` or `fix(module-name): ` - when fixing a bug
-  - `feat` or `feat(module-name): ` - when adding new features
-  - `refactor: ` or `refactor(module-name): ` - when making changes to existing features
-  - `format: ` or `format(module-name): ` - when making formatting changes or improvements
+  - `fix: ` - when fixing a bug
+  - `feat: ` - when adding new features
+  - `refactor: ` - when making changes to existing features
+  - `format: ` - when making formatting changes or improvements
 
 Examples:
   - `doc: add section for chrome release on contributing page`
   - `cicd: add steps to build and test zana_lambda`
-  - `feat(services): add new client for xyz API`
+  - `feat: add new client for xyz API`
+
+You may see older commits that include the module as well in the commit message. (_e.g. `feat(services): add new client for xyz API`_)
+Those types of commit messages should *not* be used anymore, and they're not supported by the CICD pipeline.
+
+Please check the [Pull Requests](#pull-requests) guide as well, 
+to get more information about how the commit messages affect the CICD pipeline.
 
 ### Services style guides
 
@@ -439,9 +446,24 @@ When creating a pull request please follow the following steps:
 - Ensure all the status checks have passed
 - Make sure the code follows the [style guides](#style-guides)
 
-Once a PR is approved, it can be merged and right after that it should automatically be deployed.
-Changes made to the `extension` will be packaged and distributed to browser addon stores manually by the owner
-after the PR is merged.
+Once a PR is approved, it can be merged.
+While merging the PR, change the merge commit message based on the changes that are being merged.
+
+- If you're merging a PR that fixes a bug, use `fix: ` as the prefix for the merge commit message.
+- If you're merging a PR that adds a new feature, use `feat: ` as the prefix for the merge commit message.
+- If you're merging a PR that fixes formatting issues, use `format: ` as the prefix for the merge commit message.
+- If you're merging a PR that adds or updates documentation, use `doc: ` as the prefix for the merge commit message.
+
+Once a PR is merged, the `release` workflow will be triggered, creating a new release and updating the version of the project.
+The version will change based on the commit message prefix.
+
+For new features, the minor version is incremented. (_e.g. `0.1.0` -> `0.2.0`_),
+while for bug fixes and other changes the patch version is incremented (_e.g. `0.1.1` -> `0.1.2`_).
+
+Documentation and formatting changes do not trigger a new version update and release.
+
+All the services are deployed automatically once a PR is merged, however changes made to the `extension` will be packaged
+and distributed to browser addon stores manually by the owner.
 
 ## Adding support for a new bookstore
 

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "test",
+  "description": "test description",
+  "version": "0.1.0",
+  "icons": {
+    "64": "icons/icon.png"
+  },
+  "permissions": [
+    "webRequest"
+  ]
+}

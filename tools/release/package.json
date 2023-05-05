@@ -1,0 +1,25 @@
+{
+  "name": "release",
+  "version": "0.1.0",
+  "description": "Release management for Zana",
+  "main": "release.js",
+  "scripts": {
+    "test": "jest",
+    "release:patch": "node main.js patch",
+    "release:minor": "node main.js minor"
+  },
+  "author": "Kushtrim Hajrizi",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "fast-xml-parser": "^4.2.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.21.8",
+    "@babel/plugin-transform-modules-commonjs": "^7.21.5",
+    "@babel/preset-env": "^7.21.5",
+    "babel-jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "tempy": "^3.0.0",
+    "@iarna/toml": "^2.2.5"
+  }
+}
