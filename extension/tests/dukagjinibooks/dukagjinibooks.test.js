@@ -55,6 +55,16 @@ function initializeAndSendSuccessfulEvent(responses) {
     dispatchEvent(event);
 }
 
+function displayErrorMessageForStatusCodes(statusCodes, expectedMessage) {
+    let responses = createDefaultSuccessResponses();
+    responses[0].status = statusCodes[0];
+    responses[1].status = statusCodes[1];
+    initializeAndSendSuccessfulEvent(responses);
+
+    const message = document.querySelector('.dukagjinibooks-missing-data-container');
+    expect(message.textContent).toBe(expectedMessage);
+}
+
 describe('dukagjini books', () => {
 
     beforeEach(() => {
@@ -160,14 +170,20 @@ describe('dukagjini books', () => {
         expect(ratingsCount.length).toBe(0);
     })
 
-    it('should display message that book data is not found when responses are not 200', () => {
-        let responses = createDefaultSuccessResponses();
-        responses[0].status = 404;
-        responses[1].status = 404;
-        initializeAndSendSuccessfulEvent(responses);
+    it('should display message that book data is not found when 404 is present together with 500 status code', () => {
+        displayErrorMessageForStatusCodes([404, 500], 'Zana did not find any data for this book.');
+    })
 
-        const message = document.querySelector('.dukagjinibooks-missing-data-container');
-        expect(message.textContent).toBe('Zana did not find any data for this book.');
+    it('should display message that book data is not found when 404 is present together with 429 status code', () => {
+        displayErrorMessageForStatusCodes([404, 429], 'Zana did not find any data for this book.');
+    })
+
+    it('should display message that the rate limit has been reached if 429 is included in status codes', () => {
+        displayErrorMessageForStatusCodes([429, 500], 'Zana has reached the maximum number of requests. Please try again later.');
+    })
+
+    it('should display message that book the extension is having trouble retrieving data for other status codes', () => {
+        displayErrorMessageForStatusCodes([500, 503], 'Zana is having trouble retrieving book data at the moment. Please try again later.');
     })
 
     it('should display number of pages from second response if first response has them as 0', () => {
