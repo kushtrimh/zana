@@ -8,8 +8,8 @@ on:
       - completed
 
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && !startsWith(github.event.head_commit.message, 'doc:') && !startsWith(github.event.head_commit.message, 'format:') }}
+  release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && !startsWith(github.event.head_commit.message, 'doc:') && !startsWith(github.event.head_commit.message, 'format:') && !startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,25 +26,30 @@ jobs:
       - name: Read version
         id: read_version
         run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
-      # Create and push new tag
+        # Create and push new tag
       - name: Create tag
         uses: actions/github-script@v6
         with:
           script: |
             const version = '${{ steps.read_version.outputs.version }}';
             const tag = `v${version}`;
-            github.rest.git.createRef({
+            github.rest.git.createTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: `refs/tags/${tag}`,
-              sha: context.sha
+              tag: `${tag}`,
+              object: context.sha,
+              message: `Release ${tag}`,
+              type: 'commit',
+              tagger: {
+                name: 'Kushtrim Hajrizi',
+                email: 'kushtrimh@users.noreply.github.com'
+              }
             });
       # Create new release
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.read_version.outputs.version }}
-
       # Update version
       - if: ${{ startsWith(github.event.head_commit.message, 'feat:') }}
         name: Update minor version
@@ -54,10 +59,15 @@ jobs:
         name: Update patch version
         working-directory: tools/release
         run: npm install && npm run release:patch
-      # Commit the changes
-      - name: Commit version changes
+        # Create new branch and commit version update changes
+      - name: Version update commit
         run: |
           git config --global user.name 'Kushtrim Hajrizi'
           git config --global user.email 'kushtrimh@users.noreply.github.com'
+          git checkout -b "version-update-${{ steps.read_version.outputs.version }}"
           git commit -am "release: version update"
-          git push
+          git push origin version-update-${{ steps.read_version.outputs.version }}
+      - name: Version update pull request
+        run: gh pr create -t "Version update ${{ steps.read_version.outputs.version }}" -b "Version update after release" -B main -H version-update-${{ steps.read_version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
