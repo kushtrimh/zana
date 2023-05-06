@@ -1,8 +1,6 @@
 # zana
 
-![build](https://github.com/kushtrimh/zana/actions/workflows/build.yml/badge.svg?branch=main)
-![deploy](https://github.com/kushtrimh/zana/actions/workflows/deploy.yml/badge.svg?branch=main)
-![release](https://github.com/kushtrimh/zana/actions/workflows/release.yml/badge.svg?branch=main)
+![cicd](https://github.com/kushtrimh/zana/actions/workflows/cicd.yml/badge.svg?branch=main)
 
 Zana is a browser extension that adds book information and ratings to supported bookstore websites.
 The data is retrieved from a list of third-party book APIs.
