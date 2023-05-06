@@ -1,6 +1,6 @@
 {
   "name": "zana",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "'Quality of life' extension for websites that sell books.",
   "main": "index.js",
   "scripts": {
