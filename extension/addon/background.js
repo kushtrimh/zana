@@ -3,6 +3,10 @@ if (typeof browser === 'undefined') {
     browser = chrome;
 }
 
+function cleanHost(host) {
+    return host.replace('www.', '');
+}
+
 // List of URLs to be intercepted
 let targets = [
     'https://dukagjinibooks.com/api/products/*'
@@ -20,7 +24,7 @@ let hostsConfig = {
 
 function listener(details) {
     const url = details.url;
-    const host = new URL(url).host;
+    const host = cleanHost(new URL(url).host);
     const hostConfig = hostsConfig[host];
     if (hostConfig) {
         if (hostConfig.skipPatternCheck || hostConfig.pattern.test(url)) {

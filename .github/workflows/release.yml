@@ -69,6 +69,6 @@ jobs:
           git commit -am "release: version update"
           git push origin version-update-${{ steps.read_version.outputs.version }}
       - name: Version update pull request
-        run: gh pr create -t "Version update ${{ steps.read_version.outputs.version }}" -b "Version update after release" -B main -H version-update-${{ steps.read_version.outputs.version }}
+        run: gh pr create -t "Version update" -b "Version update after release" -B main -H version-update-${{ steps.read_version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

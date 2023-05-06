@@ -62,14 +62,14 @@ dukagjiniBooks.init = function () {
         }
     }
 
-    function createMissingDataElement() {
+    function createMissingDataElement(message) {
         let missingDataContainer = document.createElement('div');
         missingDataContainer.className = 'dukagjinibooks-missing-data-container';
-        missingDataContainer.textContent = ' did not find any data for this book.';
+        missingDataContainer.textContent = message;
 
         let missingDataAppName = document.createElement('span');
         missingDataAppName.className = 'dukagjinibooks-missing-data-app-name';
-        missingDataAppName.textContent = 'Zana';
+        missingDataAppName.textContent = 'Zana ';
 
         missingDataContainer.prepend(missingDataAppName);
         return missingDataContainer;
@@ -135,18 +135,28 @@ dukagjiniBooks.init = function () {
 
         // Keep only the successful responses
         let responses = event.detail.responses;
-        responses = responses.filter(response => response.status === 200);
+        let validResponses = responses.filter(response => response.status === 200);
 
-        if (responses.length === 0) {
-            let missingDataElement = createMissingDataElement();
+        if (validResponses.length === 0) {
+            let statusCodes = responses.map(response => response.status);
+            let message;
+            if (statusCodes.includes(404)) {
+                message = 'did not find any data for this book.';
+            } else if (statusCodes.includes(429)) {
+                message = 'has reached the maximum number of requests. Please try again later.';
+            } else {
+                message = 'is having trouble retrieving book data at the moment. Please try again later.';
+            }
+
+            let missingDataElement = createMissingDataElement(message);
             dataContainer.appendChild(missingDataElement);
             bookDetailsNode.append(dataContainer);
             console.log('Zana response: ', event.detail.responses);
             return;
         }
 
-        addRatings(responses, dataContainer);
-        addBookMetadata(responses, dataContainer);
+        addRatings(validResponses, dataContainer);
+        addBookMetadata(validResponses, dataContainer);
         bookDetailsNode.append(dataContainer);
     }
 

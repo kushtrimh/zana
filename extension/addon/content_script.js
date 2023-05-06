@@ -3,9 +3,13 @@ if (typeof browser === 'undefined') {
     browser = chrome;
 }
 
+function cleanHost(host) {
+    return host.replace('www.', '');
+}
+
 const apiUrl = 'https://api.zanareads.com/books';
 
-const host = window.location.host;
+const host = cleanHost(window.location.host);
 
 // List of supported hosts.
 const hostsConfig = {
@@ -80,6 +84,8 @@ function retrieveBookData(isbn) {
             });
         })
         .catch(error => {
+            console.error('Zana: Error while retrieving book data for isbn: ' + isbn);
+            console.error(error);
             return {
                 isbn: isbn,
                 body: error,
