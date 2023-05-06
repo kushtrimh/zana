@@ -18,7 +18,7 @@ By participating to Zana, you are expected to uphold our [Code of Conduct](./COD
   - [Extension](#extension)
 - [Style Guides](#style-guides)
   - [Git Commit Messages](#git-commit-messages)
-  - [Services/Release (Rust) Style Guides](#services-style-guides)
+  - [Services (Rust) Style Guides](#services-style-guides)
   - [Extension (JavaScript) Style Guides](#extension-style-guides)
   - [Deployment (Java) Style Guides](#deployment-style-guides)
 - [Pull Requests](#pull-requests)
