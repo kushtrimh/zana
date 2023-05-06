@@ -387,6 +387,7 @@ The result will be a new directory `dist.chrome.mv3.release` that will contain t
   - `feat: ` - when adding new features
   - `refactor: ` - when making changes to existing features
   - `format: ` - when making formatting changes or improvements
+  - `release: ` - when merging a version update PR (created automatically by the CICD pipeline)
 
 Examples:
   - `doc: add section for chrome release on contributing page`
@@ -404,6 +405,7 @@ to get more information about how the commit messages affect the CICD pipeline.
 Services that are built with Rust follow the standard [code conventions](https://rustc-dev-guide.rust-lang.org/conventions.html).
 
 - 4 spaces indentation
+- Use single quotes for strings
 - Use _snake_case_ for variables and functions
 - Use _UpperCamelCase_ for types
 - When adding a new module with 2 or three words in the name, use underscore as the delimiter
@@ -454,13 +456,16 @@ While merging the PR, change the merge commit message based on the changes that 
 - If you're merging a PR that fixes formatting issues, use `format: ` as the prefix for the merge commit message.
 - If you're merging a PR that adds or updates documentation, use `doc: ` as the prefix for the merge commit message.
 
-Once a PR is merged, the `release` workflow will be triggered, creating a new release and updating the version of the project.
-The version will change based on the commit message prefix.
+Once a PR is merged, the `release` workflow will be triggered, creating a new release on GitHub.
+During the `release` workflow, the project version will be increased as well, based on the merge commit message prefix.
 
 For new features, the minor version is incremented. (_e.g. `0.1.0` -> `0.2.0`_),
 while for bug fixes and other changes the patch version is incremented (_e.g. `0.1.1` -> `0.1.2`_).
 
 Documentation and formatting changes do not trigger a new version update and release.
+
+The version update changes will be done through a new PR, created automatically, which the maintainers will merge.
+Version update PRs merge commit messages should begin with the `release: ` prefix.
 
 All the services are deployed automatically once a PR is merged, however changes made to the `extension` will be packaged
 and distributed to browser addon stores manually by the owner.
