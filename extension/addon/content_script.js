@@ -3,9 +3,13 @@ if (typeof browser === 'undefined') {
     browser = chrome;
 }
 
+function cleanHost(host) {
+    return host.replace('www.', '');
+}
+
 const apiUrl = 'https://api.zanareads.com/books';
 
-const host = window.location.host;
+const host = cleanHost(window.location.host);
 
 // List of supported hosts.
 const hostsConfig = {
