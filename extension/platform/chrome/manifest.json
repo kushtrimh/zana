@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "zana",
   "description": "'Quality of life' extension for websites that sell books.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icons": {
     "64": "icons/icon.png"
   },
@@ -42,7 +42,7 @@
         "css/dukagjinibooks.css"
       ],
       "matches": [
-          "*://*.dukagjinibooks.com/*"
+        "*://*.dukagjinibooks.com/*"
       ]
     }
   ]
