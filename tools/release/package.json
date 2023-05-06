@@ -1,6 +1,6 @@
 {
   "name": "release",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Release management for Zana",
   "main": "release.js",
   "scripts": {
