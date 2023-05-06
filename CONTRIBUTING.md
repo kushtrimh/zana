@@ -382,7 +382,7 @@ The result will be a new directory `dist.chrome.mv3.release` that will contain t
 - Use present tense, "add feature" instead of "added feature"
 - Start the commit messages with the following words:
   - `doc: ` - when making documentation or license changes
-  - `cicd: ` - when changing any of the GitHub Actions workflows
+  - `cicd: ` - when changing any of the GitHub Actions jobs
   - `fix: ` - when fixing a bug
   - `feat: ` - when adding new features
   - `refactor: ` - when making changes to existing features
@@ -456,8 +456,8 @@ While merging the PR, change the merge commit message based on the changes that 
 - If you're merging a PR that fixes formatting issues, use `format: ` as the prefix for the merge commit message.
 - If you're merging a PR that adds or updates documentation, use `doc: ` as the prefix for the merge commit message.
 
-Once a PR is merged, the `release` workflow will be triggered, creating a new release on GitHub.
-During the `release` workflow, the project version will be increased as well, based on the merge commit message prefix.
+Once a PR is merged, the `release` job will be triggered, creating a new release on GitHub.
+During the `release` job, the project version will be increased as well, based on the merge commit message prefix.
 
 For new features, the minor version is incremented. (_e.g. `0.1.0` -> `0.2.0`_),
 while for bug fixes and other changes the patch version is incremented (_e.g. `0.1.1` -> `0.1.2`_).

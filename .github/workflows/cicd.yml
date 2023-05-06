@@ -1,0 +1,188 @@
+name: cicd
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+  ZANA_ENV: prod
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        # Rust, Zig and Cargo Lambda setup
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Zig toolchain
+        uses: korandoru/setup-zig@v1
+        with:
+          zig-version: 0.10.0
+      - name: Install Cargo Lambda
+        uses: jaxxstorm/action-install-gh-release@v1.9.0
+        with:
+          repo: cargo-lambda/cargo-lambda
+          tag: v0.19.0
+          platform: linux
+          arch: x86_64
+        # Zana build and test runs
+      - name: Build zana service
+        working-directory: services/zana
+        run: cargo build --verbose
+      - name: Run tests in zana service
+        working-directory: services/zana
+        run: cargo test --verbose
+        # Zana Lambda build and test runs
+      - name: Build zana_lambda service
+        working-directory: services/zana_lambda
+        run: cargo lambda build --release --output-format zip --verbose
+      - name: Run tests in zana_lambda service
+        working-directory: services/zana_lambda
+        run: cargo test --verbose
+        # NodeJS and AWS CDK setup
+      - name: Install Node.js toolchain
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install -g aws-cdk@2.67.0
+        # Java setup
+      - name: Install Java 17 toolchain
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+        # Zana AWS test runs
+      - name: Run tests in zana_aws service
+        working-directory: deployment/zana_aws
+        run: mvn clean compile && mvn clean test
+        # Web-ext setup
+      - run: npm install -g web-ext@7.6.1
+        # Extension linting and test runs
+      - name: Lint zana extension
+        working-directory: extension/addon/
+        run: web-ext lint
+      - name: Run tests in zana extension
+        working-directory: extension/
+        run: npm install && npm test
+      - name: Run tests in release tool
+        working-directory: tools/release/
+        run: npm install && npm test
+
+  deploy:
+    if: ${{ github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'release:') }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      # Setup Rust, Cargo Lambda, Zig, Java, NodeJS and AWS CDK
+      - uses: actions/checkout@v3
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Zig toolchain
+        uses: korandoru/setup-zig@v1
+        with:
+          zig-version: 0.10.0
+      - name: Install Cargo Lambda
+        uses: jaxxstorm/action-install-gh-release@v1.9.0
+        with:
+          repo: cargo-lambda/cargo-lambda
+          tag: v0.19.0
+          platform: linux
+          arch: x86_64
+      - name: Install Node.js toolchain
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install -g aws-cdk@2.67.0
+      - name: Install Java 17 toolchain
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+        # Build zana_lambda code
+      - name: Build zana_lambda service
+        working-directory: services/zana_lambda
+        run: cargo lambda build --release --output-format zip --verbose
+        # Deploy to AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: ${{ secrets.AWS_ROLE_SESSION_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Deploy to AWS
+        working-directory: deployment/zana_aws
+        run: cdk deploy --require-approval never
+
+  release:
+    if: ${{ github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'doc:') && !startsWith(github.event.head_commit.message, 'format:') && !startsWith(github.event.head_commit.message, 'release:') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Setup Rust and NodeJS
+      - uses: actions/checkout@v3
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Node.js toolchain
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      # Read version from version file
+      - name: Read version
+        id: read_version
+        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+        # Create and push new tag
+      - name: Create tag
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const version = '${{ steps.read_version.outputs.version }}';
+            const tag = `v${version}`;
+            github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: `${tag}`,
+              object: context.sha,
+              message: `Release ${tag}`,
+              type: 'commit',
+              tagger: {
+                name: 'Kushtrim Hajrizi',
+                email: 'kushtrimh@users.noreply.github.com'
+              }
+            });
+      # Create new release
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.read_version.outputs.version }}
+      # Update version
+      - if: ${{ startsWith(github.event.head_commit.message, 'feat:') }}
+        name: Update minor version
+        working-directory: tools/release
+        run: npm install && npm run release:minor
+      - if: ${{ !startsWith(github.event.head_commit.message, 'feat:') }}
+        name: Update patch version
+        working-directory: tools/release
+        run: npm install && npm run release:patch
+        # Create new branch and commit version update changes
+      - name: Version update commit
+        run: |
+          git config --global user.name 'Kushtrim Hajrizi'
+          git config --global user.email 'kushtrimh@users.noreply.github.com'
+          git checkout -b "version-update-${{ steps.read_version.outputs.version }}"
+          git commit -am "release: version update"
+          git push origin version-update-${{ steps.read_version.outputs.version }}
+      - name: Version update pull request
+        run: gh pr create -t "Version update" -b "Version update after release" -B main -H version-update-${{ steps.read_version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
