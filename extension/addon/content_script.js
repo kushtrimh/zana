@@ -80,6 +80,8 @@ function retrieveBookData(isbn) {
             });
         })
         .catch(error => {
+            console.error('Zana: Error while retrieving book data for isbn: ' + isbn);
+            console.error(error);
             return {
                 isbn: isbn,
                 body: error,
