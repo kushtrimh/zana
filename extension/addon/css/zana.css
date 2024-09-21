@@ -1,0 +1,163 @@
+.zana-container {
+    background-color: #fff;
+    /* box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1); */
+    margin: 0 0 20px;
+    padding: 2em;
+    color: #7a7777;
+}
+
+/*
+@media (max-width: 1280px) {
+    .zana-container {
+        margin: 0 5px !important;
+    }
+
+    .zana-main-panel {
+        width: 25%;
+    }
+}
+
+@media (min-width: 721px) {
+    .zana-main-panel {
+        width: 20%;
+    }
+}
+
+@media (max-width: 1280px) {
+    .zana-main-panel {
+        width: 40%;
+    }
+}
+
+@media (max-width: 560px) {
+    .zana-main-panel {
+        width: 100%;
+    }
+}
+
+*/
+
+.zana-main-container {
+    width: 5em;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.zana-main-button {
+    width: 100%;
+    height: 5em;
+    background-color: green;
+    position: sticky;
+    top: 50%;
+    left: 100%;
+    z-index: 99999;
+    border-left: 1px solid #ccc;
+}
+
+.zana-main-panel-container {
+    width: 20em;
+    height: 100%;
+    position: absolute;
+    visibility: hidden;
+    top: 0;
+    right: 5em;
+}
+
+.zana-main-panel {
+    width: 100%;
+    height: 30em;
+    border: 1px solid green;
+    border-radius: 15px;
+    visibility: hidden;
+    position: sticky;
+    top: 30%;
+    right: 5em;
+    overflow: scroll;
+    z-index: 999999999;
+}
+
+.zana-ratings-container {
+    color: #ffcc00;
+    font-size: 1.5em;
+    line-height: 1em;
+    display: block;
+    width: 100%;
+}
+
+.zana-rating {
+    display: block;
+    margin: 0 0 1em;
+}
+
+.zana-stars {
+    color: #f1a60d;
+    text-align: center;
+    display: inline-block;
+}
+
+.zana-star {
+    margin-right: 5px;
+}
+
+.zana-rating-type {
+    padding-right: 2em;
+    display: inline-block;
+    width: 7.5em;
+}
+
+.zana-rating-data {
+    font-size: 14px;
+    color: #b8b4b4;
+    font-weight: 700;
+    margin-left: 0.5em;
+    display: inline-block;
+}
+
+.zana-metadata-container {
+    display: block;
+    font-size: 14px;
+    color: #7a7777;
+    font-weight: 700;
+    margin: 1em 0;
+}
+
+.zana-rating-type-image {
+    margin-left: 10px;
+    padding-top: 7px;
+}
+
+.zana-rating-external-link {
+    margin-left: 2px;
+    fill: #d8565b;
+}
+
+.zana-rating-external-link-image {
+    padding-top: 7px;
+}
+
+.zana-description {
+    display: block;
+    width: 100%;
+}
+
+.zana-loading-container {
+    margin-top: 25%;
+    width: 100%;
+}
+
+.zana-loading-image {
+    display: block;
+    margin: auto;
+}
+
+.zana-missing-data-container {
+    display: block;
+    margin: auto;
+}
+
+.zana-missing-data-app-name {
+    font-weight: 700;
+    color: #d8565b;
+}

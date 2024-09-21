@@ -79,7 +79,7 @@ The whole extension package will be migrated and adapted to *Manifest v3* in the
 
 - [Rust](https://www.rust-lang.org/) >=1.68.0 (`services`)
 - [Cargo Lambda](https://www.cargo-lambda.info/) >=0.17.1 (`services`)
-- [Node.js](https://nodejs.org/en) >=v18.14.2 (`extension`, `deployment`, `tools`)
+- [Node.js](https://nodejs.org/en) >=v22.8.0 (`extension`, `deployment`, `tools`)
 - [Web-ext](https://github.com/mozilla/web-ext) >=7.6.1 (`extension`)
 - [AWS CLI](https://aws.amazon.com/cli/) >=2.10.3 (`deployment`)
 - [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) >=2.67.0 (`deployment`)

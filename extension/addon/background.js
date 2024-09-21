@@ -9,16 +9,16 @@ function cleanHost(host) {
 
 // List of URLs to be intercepted
 let targets = [
-    'https://dukagjinibooks.com/api/products/*'
+    'https://api.dukagjinibooks.com/api/products*'
 ];
 
 // List of hosts that are supported.
 // Each host can have a pattern that is used to match the URLs further in case the `targets` definition is too broad.
 // If the `targets` definition is enough to match the URLs, the `skipPatternCheck` can be set to `true` to skip the pattern check.
 let hostsConfig = {
-    'dukagjinibooks.com': {
-        pattern: /^https:\/\/dukagjinibooks\.com\/api\/products\/\d+$/,
-        skipPatternCheck: false,
+    'api.dukagjinibooks.com': {
+        pattern: null,
+        skipPatternCheck: true,
     }
 }
 
