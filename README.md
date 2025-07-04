@@ -1,5 +1,7 @@
 # zana
 
+**This project is no longer available or supported.**
+
 ![cicd](https://github.com/kushtrimh/zana/actions/workflows/cicd.yml/badge.svg?branch=main)
 
 Zana is a browser extension that adds book information and ratings to supported bookstore websites.
